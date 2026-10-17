@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pip · Junior Dream Engineer</title>
+  <meta name="description" content="Pip's portfolio: a sleepy skull baby who builds the dreams you fall asleep inside. Made for haX.baby's Baby's First Website.">
+  <meta name="theme-color" content="#1e1b3a">
+  <link rel="icon" href="/assets/img/pip-pixel-64.webp" type="image/webp">
+</head>
+<body class="booting">
+  <a class="skip-link" href="#hero">Skip to Pip</a>
+
+  <!-- S0 · Boot and wake -->
+  <div id="boot" role="dialog" aria-modal="true" aria-labelledby="boot-title">
+    <div class="boot-inner">
+      <img class="boot-logo" data-img="pip-pixel" data-want="256" data-sizes="96px" alt="" loading="eager">
+      <h1 id="boot-title" class="boot-title">DreamOS 93</h1>
+      <pre class="boot-lines" aria-hidden="true"></pre>
+      <div class="boot-bar" role="progressbar" aria-label="Loading dreams" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+      <div class="boot-wake" hidden>
+        <img class="boot-pip" data-img="pip-asleep" data-want="512" data-sizes="(max-width: 600px) 60vw, 280px" alt="Pip, fast asleep on a little cloud" loading="eager">
+        <button class="wake-btn" id="wake-btn" type="button">☾ Tap to wake Pip</button>
+        <button class="quiet-btn btn-reset" id="quiet-btn" type="button">Enter quietly (sound off)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="night-progress" aria-hidden="true"><span class="night-moon">☾</span></div>
+  <main id="page">
+
+    <!-- S1 · Hero -->
+    <section id="hero" class="scene hero" data-section="hero" aria-label="Hi, I'm Pip">
+      <div class="paint">
+        <img class="theme-night" data-img="hero-night" alt="" loading="eager" fetchpriority="high">
+        <img class="theme-day" data-img="hero-day" alt="">
+      </div>
+      <div class="hero-letters" aria-label="Pip">
+        <button class="letter btn-reset" type="button" data-note="0" aria-label="Boing the P">P</button>
+        <button class="letter btn-reset" type="button" data-note="1" aria-label="Boing the I">I</button>
+        <button class="letter btn-reset" type="button" data-note="2" aria-label="Boing the other P">P</button>
+      </div>
+      <img class="hero-clouds" data-img="hero-clouds" alt="" loading="eager">
+      <button id="pip" class="pip btn-reset" type="button" aria-label="Poke Pip">
+        <span class="pip-faces">
+          <img class="face face-default on" data-img="pip-default" data-want="1024" data-sizes="(max-width: 600px) 80vw, 420px" alt="Pip, a baby with a round skull face and glowing eye-lights, sitting on a cloud" loading="eager">
+          <img class="face face-happy" data-img="pip-happy" data-want="1024" data-sizes="(max-width: 600px) 80vw, 420px" alt="" loading="eager">
+          <img class="face face-surprised" data-img="pip-surprised" data-want="1024" data-sizes="(max-width: 600px) 80vw, 420px" alt="">
+          <img class="face face-sleepy" data-img="pip-sleepy" data-want="1024" data-sizes="(max-width: 600px) 80vw, 420px" alt="">
+          <img class="face face-cheeky" data-img="pip-cheeky" data-want="1024" data-sizes="(max-width: 600px) 80vw, 420px" alt="">
+        </span>
+        <span class="eye eye-l" aria-hidden="true"><i></i></span>
+        <span class="eye eye-r" aria-hidden="true"><i></i></span>
+      </button>
+      <p class="tagline"><span>“I build the dreams you fall asleep inside.”</span></p>
+      <p class="hero-sub">Pip · Junior Dream Engineer · Midnight Nursery</p>
+      <button class="portal-ring btn-reset" type="button" aria-label="A strange little ring" data-tip="…?"><span></span></button>
+      <p class="scroll-hint" aria-hidden="true">scroll to dream ↓</p>
+    </section>
+
+    <!-- S2 · Who is Pip -->
+    <section id="about" class="scene about" data-section="about" aria-labelledby="about-title">
+      <div class="paint dim">
+        <img class="theme-night" data-img="nursery-night" alt="">
+        <img class="theme-day" data-img="nursery-day" alt="">
+      </div>
+      <div class="about-grid">
+        <article class="os-window profile">
+          <header class="win-bar static"><img class="win-icon" data-img="icon-guestbook" data-want="64" data-sizes="20px" alt=""><h2 class="win-title" id="about-title">pip_profile.txt</h2></header>
+          <div class="profile-body">
+            <figure class="photo-booth">
+              <img data-img="pip-default" data-want="512" data-sizes="160px" alt="Pip's photo-booth picture">
+            </figure>
+            <dl class="profile-list">
+              <dt>Name</dt><dd>Pip</dd>
+              <dt>What</dt><dd>a baby with a round skull face and two glowing eye-lights (they're nightlights, actually)</dd>
+              <dt>Job</dt><dd>Junior Dream Engineer, Midnight Nursery</dd>
+              <dt>Personality</dt><dd>curious, sleepy, a little clumsy, giggles at everything</dd>
+              <dt>Loves</dt><dd>lullabies, warm lanterns, ghosts who finally fall asleep</dd>
+              <dt>Hates</dt><dd>silence (the loudest thing in the world)</dd>
+              <dt>Motto</dt><dd>“I build the dreams you fall asleep inside.”</dd>
+            </dl>
+            <button class="sock-ghost btn-reset" type="button" aria-label="A sleeping sock" data-tip="psst…">
+              <img data-img="sock-ghost" data-want="256" data-sizes="96px" alt="">
+            </button>
+          </div>
+        </article>
+
+        <div class="growth">
+          <img class="growth-wall" data-img="growth-wall" data-sizes="(max-width: 767px) 90vw, 380px" alt="">
+          <h3 class="growth-title">Pip's growth chart</h3>
+          <ul class="growth-marks">
+            <li style="--h: 12%"><button type="button" class="mark" data-tip="Beginner. Working on it. Zzz.">Staying awake</button></li>
+            <li style="--h: 52%"><button type="button" class="mark" data-tip="312 flight hours. Only crashed into the moon once.">Dream delivery</button></li>
+            <li style="--h: 68%"><button type="button" class="mark" data-tip="Six lamps and counting.">Nightlight design</button></li>
+            <li style="--h: 84%"><button type="button" class="mark" data-tip="Can hum in 4 keys and 1 sneeze.">Lullaby composing</button></li>
+            <li style="--h: 100%"><button type="button" class="mark" data-tip="Certified expert.">Giggling</button></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- S3 · Pip's story -->
+    <section id="story" class="scene story" data-section="story" aria-label="Pip's story">
+      <article class="beat" data-beat="1">
+        <div class="paint"><img data-img="story-town" alt="A tiny town of round houses where little ghosts lie awake"></div>
+        <p class="parchment">Once, the Midnight Nursery town was far too quiet. Nobody could fall asleep.</p>
+      </article>
+      <article class="beat" data-beat="2">
+        <div class="paint"><img data-img="story-clouds" alt=""></div>
+        <img class="hand hand-moon" data-img="moon-hand" data-sizes="(max-width: 767px) 70vw, 48vw" alt="The Moon's glowing hand reaching down">
+        <img class="hand hand-pip" data-img="pip-hand" data-sizes="(max-width: 767px) 60vw, 40vw" alt="Pip's tiny hand reaching up">
+        <span class="spark" aria-hidden="true"></span>
+        <p class="parchment">So the sleepy Moon reached down into the dark…</p>
+      </article>
+      <article class="beat" data-beat="3">
+        <div class="paint"><img data-img="story-star" alt="A falling star drifting toward an empty cradle"></div>
+        <p class="parchment">…and a falling star landed in an empty cradle. Hello, Pip.</p>
+      </article>
+      <article class="beat" data-beat="4">
+        <div class="paint">
+          <img class="theme-night" data-img="nursery-night" alt="Pip's nursery, where the ghosts fall asleep">
+          <img class="theme-day" data-img="nursery-day" alt="">
+        </div>
+        <p class="parchment">Pip hummed the very first lullaby. One by one, the whole town fell asleep.</p>
+        <button class="os-button first-lullaby" type="button">▶ Hear Pip's first lullaby</button>
+      </article>
+    </section>
+
+    <!-- S4 · Into the dome -->
+    <section id="dome" class="scene dome" data-section="dome" aria-label="Into Pip's workshop">
+      <div class="paint dome-paint"><img data-img="dome" data-sizes="(max-width: 767px) 120vw, 100vw" alt="Looking up into a painted dome with a round window to the stars"></div>
+      <h2 class="wordart dome-title">Pip's Workshop</h2>
+    </section>
+
+    <!-- S5 · Workshop rooms -->
+    <section id="workshop" class="scene workshop" aria-label="Pip's projects">
+      <article class="room" data-section="lab" data-room="lab">
+        <div class="paint"><img data-img="room-lab" alt=""></div>
+        <h3 class="wordart room-title">Lullaby Lab</h3>
+        <button class="room-object btn-reset" type="button" data-open="lullaby-lab" aria-label="Open the Lullaby Lab">
+          <img data-img="musicbox" data-sizes="(max-width: 767px) 50vw, 300px" alt="Pip's pastel music box with a little unicorn">
+        </button>
+        <div class="room-plate">
+          <p>Wind the music box and it hums a lullaby nobody has heard before. Turn the knobs until it sounds like sleep.</p>
+          <button class="os-button" type="button" data-open="lullaby-lab">▶ Open Lullaby Lab.exe</button>
+        </div>
+      </article>
+
+      <article class="room room-dark" data-section="nightlights" data-room="nightlights">
+        <div class="paint"><img data-img="room-gallery" alt=""></div>
+        <div class="lamps" aria-label="Hidden nightlights">
+          <img class="lamp" data-lamp="0" data-img="lamp-mushroom" data-sizes="120px" alt="Mushroom Snoozelight">
+          <img class="lamp" data-lamp="1" data-img="lamp-starjar" data-sizes="120px" alt="Star Jar">
+          <img class="lamp" data-lamp="2" data-img="lamp-jellyfish" data-sizes="120px" alt="Jellyfish Lamp">
+          <img class="lamp" data-lamp="3" data-img="lamp-cloud" data-sizes="120px" alt="Cloud Nap Lamp">
+          <img class="lamp" data-lamp="4" data-img="lamp-candle" data-sizes="120px" alt="Ghost Candle">
+          <img class="lamp" data-lamp="5" data-img="lamp-moonbottle" data-sizes="120px" alt="Moon in a Bottle">
+        </div>
+        <div class="darkness" aria-hidden="true"></div>
+        <h3 class="wordart room-title">Nightlight Collection</h3>
+        <button class="room-object btn-reset" type="button" data-open="nightlights" aria-label="Open the Nightlight Collection">
+          <img data-img="lantern" data-sizes="(max-width: 767px) 40vw, 220px" alt="Pip's dream lantern">
+        </button>
+        <div class="room-plate">
+          <p>Six lamps for six kinds of scared. Bring your light close to find them. <span class="lamp-count" aria-live="polite">0 / 6 found</span></p>
+          <div class="plate-row">
+            <button class="os-button" type="button" data-open="nightlights">▶ Open Nightlights.exe</button>
+            <button class="os-button light-all" type="button">Light everything</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="room" data-section="toys" data-room="toys">
+        <div class="paint"><img data-img="room-toys" alt=""></div>
+        <h3 class="wordart room-title">Rattle &amp; Block Toys</h3>
+        <button class="room-object btn-reset" type="button" data-open="toybox" aria-label="Open the Toy Box">
+          <img data-img="block" data-sizes="(max-width: 767px) 40vw, 240px" alt="Pip's toy block with a star, moon and heart">
+        </button>
+        <div class="room-plate">
+          <p>Rattles and blocks Pip invented between naps. Stack them, throw them, make some noise.</p>
+          <button class="os-button" type="button" data-open="toybox">▶ Open Toy Box.exe</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- S6 · Dream Delivery Route -->
+    <section id="route" class="scene route" data-section="route" aria-labelledby="route-title">
+      <div class="paint">
+        <picture>
+          <source media="(max-width: 767px) and (orientation: portrait)" data-src-img="route-tall">
+          <img data-img="route-wide" alt="A painted map of Pip's town at night, with rooftops, a river and a clock tower">
+        </picture>
+      </div>
+      <h2 class="wordart route-title" id="route-title">Dream Delivery Route</h2>
+      <ol class="stops">
+        <li style="--x: 18%; --y: 70%"><button type="button" class="stop" data-dream="A dream about flying with whales">1</button></li>
+        <li style="--x: 34%; --y: 48%"><button type="button" class="stop" data-dream="A dream about a pancake mountain">2</button></li>
+        <li style="--x: 52%; --y: 62%"><button type="button" class="stop" data-dream="A dream where the teddy talks back (nicely)">3</button></li>
+        <li style="--x: 68%; --y: 40%"><button type="button" class="stop" data-dream="A dream about being very, very tall">4</button></li>
+        <li style="--x: 84%; --y: 58%"><button type="button" class="stop" data-dream="A dream of a warm bath with a hundred ducks">5</button></li>
+      </ol>
+      <p class="route-count room-plate"><span>Dreams delivered tonight: <b class="tonight">0</b></span><span class="alltime" hidden>…and <b class="alltime-n">0</b> dreams delivered all-time</span></p>
+    </section>
+
+    <!-- S7 · Guestbook + Pinboard -->
+    <section id="guestbook" class="scene guestbook" data-section="guestbook" aria-labelledby="gb-title">
+      <div class="paint dim"><img class="theme-night" data-img="nursery-night" alt=""><img class="theme-day" data-img="nursery-day" alt=""></div>
+      <article class="os-window gb-window">
+        <header class="win-bar static"><img class="win-icon" data-img="icon-guestbook" data-want="64" data-sizes="20px" alt=""><h2 class="win-title" id="gb-title">Guestbook.exe — leave Pip a dream wish</h2></header>
+        <div class="gb-body" id="gb-body">
+          <p class="gb-loading">The guestbook opens in a moment…</p>
+        </div>
+      </article>
+      <div class="pinboard" aria-label="Pip's Pinboard">
+        <button type="button" class="badge b-bedtime" data-tip="Best viewed with your eyes closed.">best viewed at bedtime</button>
+        <button type="button" class="badge b-lullaby" data-tip="Batteries not included.">powered by lullabies</button>
+        <button type="button" class="badge b-silence" data-tip="Pip checked twice.">made with 0% silence</button>
+        <button type="button" class="badge b-ghost" data-tip="No ghosts were scared in the making of this site.">ghost friendly</button>
+        <button type="button" class="badge b-hi-pip" data-argue>Pip says hi</button>
+        <button type="button" class="badge b-hi-ghost" data-argue>Ghost says hi</button>
+        <span class="badge b-construction" aria-hidden="true">under construction ✦</span>
+      </div>
+    </section>
+
+    <!-- S8 · Dawn -->
+    <section id="dawn" class="scene dawn" data-section="dawn" aria-label="Dawn">
+      <div class="paint"><img data-img="dawn" alt="Pip's town at sunrise, every window dark and every ghost asleep"></div>
+      <button class="dawn-pip btn-reset" type="button" aria-label="Sleeping Pip">
+        <img data-img="pip-asleep" data-sizes="(max-width: 767px) 60vw, 320px" alt="">
+        <span class="zzz" aria-hidden="true">z z Z</span>
+      </button>
+      <p class="parchment dawn-text">Shh… every dream is delivered. See you tomorrow night.</p>
+      <div class="dawn-actions">
+        <button class="os-button wake-mischief" type="button">Wake Pip?</button>
+        <a class="os-button" href="#hero" id="back-top">↑ Wake Pip again</a>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-counter">Dreams delivered <span class="odometer" aria-live="off">001,204</span></div>
+      <p>Made in 48 hours for haX.baby's <em>Baby's First Website</em> · <a href="https://github.com/Pranav18102007/hax_baby_1">source on GitHub</a></p>
+      <details class="credits">
+        <summary>Credits</summary>
+        <ul id="credits-list">
+          <li>Pip character and the original asset pack: <a href="https://hax.baby/baby-problem">haX.baby</a> (Track 1 canon).</li>
+          <li>All other artwork: generated with ChatGPT image generation from our own prompts, based on the official Pip references.</li>
+          <li>Voice of Pip: recorded by our team.</li>
+          <li>Code libraries: <a href="https://gsap.com">GSAP</a>, <a href="https://lenis.darkroom.engineering">Lenis</a>, <a href="https://brm.io/matter-js/">Matter.js</a>.</li>
+          <li>Fonts: Lilita One, Nunito and VT323 from Google Fonts (SIL Open Font License).</li>
+          <li>Melodies: Brahms' Lullaby and Twinkle Twinkle Little Star (public domain), played on a synthesized music box.</li>
+        </ul>
+      </details>
+    </footer>
+  </main>
+
+  <!-- DreamOS taskbar -->
+  <nav id="taskbar" aria-label="DreamOS taskbar">
+    <button class="tb-start" id="start-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="startmenu" data-sfx="click">
+      <img data-img="pip-pixel" data-want="64" data-sizes="24px" alt=""><span>Start</span>
+    </button>
+    <div class="tb-windows" id="tb-windows"></div>
+    <div class="tb-tray">
+      <button class="tb-btn tb-display desk-only" id="tb-display" type="button" aria-label="Display mode: normal" data-tip="Change the screen">
+        <img data-img="icon-monitor" data-want="64" data-sizes="22px" alt="">
+      </button>
+      <button class="tb-btn" id="tb-theme" type="button" aria-pressed="false" aria-label="Switch to day">
+        <img data-img="icon-daynight" data-want="64" data-sizes="22px" alt="">
+      </button>
+      <button class="tb-btn" id="tb-mute" type="button" aria-pressed="false" aria-label="Mute sound">
+        <span class="spk" aria-hidden="true"></span>
+      </button>
+      <div class="tb-counter desk-only" aria-label="Dreams delivered"><span class="odometer">001,204</span></div>
+      <button class="tb-clock btn-reset" id="tb-clock" type="button"><time></time><span class="clock-note desk-only"></span></button>
+    </div>
+  </nav>
+
+  <div id="startmenu" class="startmenu" role="menu" aria-label="Start menu" hidden>
+    <div class="sm-banner" aria-hidden="true">DreamOS <b>93</b></div>
+    <div class="sm-items"></div>
+  </div>
+
+  <div id="windows" aria-live="off"></div>
+  <div id="tooltip" role="tooltip" hidden></div>
+  <div id="bubble" aria-hidden="true"></div>
+  <div id="live" class="sr-only" aria-live="polite"></div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

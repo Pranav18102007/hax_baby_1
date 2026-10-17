@@ -1,0 +1,61 @@
+/* Design tokens. Fonts are placeholders until the final picks land. */
+:root {
+  --cream: #fff5e8;
+  --blush: #f6b5c8;
+  --lavender: #c9b6e4;
+  --gold: #f3d27a;
+  --glow: #ffc873;
+  --navy: #1e1b3a;
+  --plum: #3b2a5c;
+  --sky: #cfe6f5;
+  --mint: #bfe8d6;
+
+  /* DreamOS 93 chrome */
+  --os-face: #ddd3ee;
+  --os-light: #ffffff;
+  --os-shadow: #9282b8;
+  --os-dark: #3b2a5c;
+  --os-title-a: #3b2a5c;
+  --os-title-b: #8a6fc4;
+  --os-title-ink: #fff5e8;
+  --tip-bg: #fff6bf;
+
+  --font-display: 'Lilita One', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-pixel: 'VT323', 'Courier New', monospace;
+  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --taskbar-h: 44px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --radius: 4px;
+  --focus: 2px dashed var(--gold);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+@media (max-width: 767px) {
+  :root { --taskbar-h: 56px; }
+}
+
+/* Night (default) */
+:root,
+:root[data-theme='night'] {
+  --bg: var(--navy);
+  --ink: var(--cream);
+  --ink-soft: #d9cfee;
+  --plate: rgba(30, 27, 58, 0.78);
+  --plate-ink: var(--cream);
+  --accent: var(--gold);
+  --eye: #ffc873;
+}
+
+:root[data-theme='day'] {
+  --bg: #fdeee0;
+  --ink: var(--plum);
+  --ink-soft: #5a4780;
+  --plate: rgba(255, 245, 232, 0.86);
+  --plate-ink: var(--plum);
+  --accent: #c98a1a;
+  --eye: #fff8d6;
+  color-scheme: light;
+}
