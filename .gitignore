@@ -1,0 +1,7 @@
+node_modules/
+dist/
+assets-raw/
+.env*
+.vercel/
+test-results/
+*.log
