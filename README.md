@@ -12,7 +12,7 @@ We wanted Pip's site to feel like a *place*, not a page. Renaissance ceilings ar
 
 Everything Pip shows off is playable. The Lullaby Lab composes a new music-box lullaby each time you wind it (and slows down as the spring runs out). The nightlight gallery is pitch dark until you bring your lantern close. The toy box has real physics. Pip's eye-lights follow you around the page, Pip hates silence (so muting the site makes Pip sad), and switching day to night runs a bath with rubber ducks. The proudest bits: the stardust that builds each of Pip's inventions as you scroll in, and Bad Dream Mode, where nightmares take over the whole site until a tiny unicorn antivirus saves the day.
 
-We built it in 48 hours as a team of two: one of us designed the world, generated and art-directed every picture and recorded Pip's voice; the other built it with Claude Code as the coding partner. We kept it phone-first, keyboard-friendly and quiet until you ask for sound.
+We built it in 48 hours as a team of two: **Anushka Bhalekar** designed the world, generated and art-directed every picture and recorded Pip's voice; **Pranav Shinde** built it with Claude Code as the coding partner. We kept it phone-first, keyboard-friendly and quiet until you ask for sound.
 
 ## What's inside
 
@@ -57,9 +57,10 @@ The guestbook and counter use Vercel Functions (`/api`) with Upstash Redis. Set 
 
 ## Credits
 
+- **Team:** Anushka Bhalekar (design, art direction, voice) and Pranav Shinde (build).
 - **Pip** and the original asset pack: [haX.baby](https://hax.baby/baby-problem) (Track 1 canon).
 - **All other artwork:** generated with ChatGPT image generation from our own prompts, art-directed from the official Pip references.
-- **Voice of Pip:** every line recorded by our teammate, lightly cleaned up with AI audio editing (ChatGPT), then pitched and levelled in our build script.
+- **Voice of Pip:** every line recorded by Anushka Bhalekar, lightly cleaned up with AI audio editing (ChatGPT), then pitched and levelled in our build script.
 - **Code:** [GSAP](https://gsap.com) (Standard License, free), [Lenis](https://github.com/darkroomengineering/lenis) (MIT), [Matter.js](https://github.com/liabru/matter-js) (MIT), [Upstash](https://upstash.com) SDKs (MIT).
 - **Fonts:** Lilita One, Nunito and VT323 via Fontsource (SIL Open Font License).
 - **Melodies:** Brahms' Lullaby and Twinkle Twinkle Little Star (public domain), played on a synthesized music box.
