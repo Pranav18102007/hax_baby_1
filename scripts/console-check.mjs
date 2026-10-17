@@ -19,7 +19,7 @@ const exe = process.env.CHROME_PATH || (fs.existsSync('/opt/pw-browsers/chromium
 const browser = await chromium.launch(exe ? { executablePath: exe } : {});
 
 for (const s of sizes) {
-  const ctx = await browser.newContext({ viewport: { width: s.width, height: s.height }, isMobile: !!s.isMobile, hasTouch: !!s.hasTouch, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: s.width, height: s.height }, isMobile: !!s.isMobile, hasTouch: !!s.hasTouch, deviceScaleFactor: 1, reducedMotion: process.env.REDUCED ? 'reduce' : 'no-preference' });
   const page = await ctx.newPage();
   page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) problems.push(`[${s.name}] console.${m.type()}: ${m.text()}`); });
   page.on('pageerror', (e) => problems.push(`[${s.name}] pageerror: ${e.message}`));

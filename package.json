@@ -7,8 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "assets": "node scripts/process-assets.mjs",
-    "check": "node scripts/console-check.mjs"
+    "assets": "python3 -I scripts/process_assets.py",
+    "check": "node scripts/console-check.mjs",
+    "check:a11y": "node scripts/a11y-check.mjs",
+    "voice": "bash scripts/process_voice.sh"
   },
   "dependencies": {
     "@fontsource/lilita-one": "^5.3.0",
@@ -21,6 +23,7 @@
     "matter-js": "^0.20.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@types/matter-js": "^0.20.2",
     "@types/node": "^26.6.5",
     "@vercel/node": "^24.0.3",

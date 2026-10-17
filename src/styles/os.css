@@ -40,7 +40,8 @@
 .boot-lines { margin: 0; min-height: 6.5em; width: 100%; text-align: left; font-family: var(--font-pixel); font-size: 20px; line-height: 1.25; white-space: pre-wrap; color: #bfe8d6; }
 .boot-bar { width: 100%; height: 18px; border: 2px solid #bfe8d6; padding: 2px; }
 .boot-bar span { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, #bfe8d6 0 10px, transparent 10px 13px); transition: width 0.25s; }
-.boot-wake { display: grid; justify-items: center; gap: 10px; animation: rise 0.6s var(--ease-out); }
+.boot-wake { display: grid; justify-items: center; gap: 10px; visibility: hidden; }
+.boot-wake.show { visibility: visible; animation: rise 0.6s var(--ease-out); }
 .boot-pip { width: min(280px, 62vw); height: auto; filter: drop-shadow(0 0 30px rgba(255, 200, 115, 0.35)); animation: bob 3.2s ease-in-out infinite; }
 .wake-btn {
   min-height: 56px; padding: 12px 28px; border-radius: 999px;

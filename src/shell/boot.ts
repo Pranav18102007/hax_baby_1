@@ -47,7 +47,7 @@ export async function runBoot(critical: HTMLImageElement[]): Promise<void> {
   setPct(1);
   pre.textContent += `\nLoading dreams ......... 100%`;
 
-  wake.hidden = false;
+  wake.classList.add('show');
   const btn = document.getElementById('wake-btn') as HTMLButtonElement;
   const quiet = document.getElementById('quiet-btn') as HTMLButtonElement;
   btn.focus();
