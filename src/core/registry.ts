@@ -22,6 +22,10 @@ export interface StartItem {
   group: 'programs' | 'main' | 'special';
   order?: number;
   run: () => void;
+  /** Only shown in the phone Start menu (things the phone taskbar has no room for). */
+  phoneOnly?: boolean;
+  /** Label worked out each time the menu opens (e.g. ▶ / ⏸). */
+  dynamicLabel?: () => string;
   /** Return true to show the item greyed out with a padlock. */
   locked?: () => boolean;
 }

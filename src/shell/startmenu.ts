@@ -3,6 +3,7 @@ import { url } from '../core/assets';
 import { isPhone, trapFocus } from '../core/a11y';
 import type { StartItem } from '../core/registry';
 import { scrollToEl } from '../core/scroll';
+import { voice } from '../core/voice';
 
 /** Scene shortcuts are built in; everything else comes from features via the registry. */
 const SCENES: [string, string][] = [
@@ -49,16 +50,23 @@ export function initStartMenu(items: StartItem[]): void {
     for (const [id, label] of SCENES) {
       list.append(row(label, undefined, () => scrollToEl(`#${id}`), { cls: 'sm-scene' }));
     }
-    const byGroup = (g: StartItem['group']) => items.filter((i) => i.group === g).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
+    const phone = isPhone();
+    const label = (i: StartItem) => i.dynamicLabel?.() ?? i.label;
+    const byGroup = (g: StartItem['group']) => items.filter((i) => i.group === g && (!i.phoneOnly || phone)).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
     const programs = byGroup('programs');
     if (programs.length) {
       list.append(heading('Programs'));
-      programs.forEach((i) => list.append(row(i.label, i.icon, i.run, { locked: i.locked?.() })));
+      programs.forEach((i) => list.append(row(label(i), i.icon, i.run, { locked: i.locked?.() })));
     }
     const main = [...byGroup('main'), ...byGroup('special')];
     if (main.length) {
       list.append(heading('More'));
-      main.forEach((i) => list.append(row(i.label, i.icon, i.run, { locked: i.locked?.(), cls: i.group === 'special' ? 'sm-special' : '' })));
+      main.forEach((i) => list.append(row(label(i), i.icon, i.run, { locked: i.locked?.(), cls: i.group === 'special' ? 'sm-special' : '' })));
+    }
+    if (phone) {
+      // the phone taskbar has no room for the hit counter, so it lives here
+      const n = document.querySelector('.footer-counter .odometer')?.textContent?.trim() || '001,204';
+      list.append(row(`Dreams delivered: ${n}`, undefined, () => voice.bubble(`${n} dreams delivered so far!`), { cls: 'sm-counter' }));
     }
   }
 

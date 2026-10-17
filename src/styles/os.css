@@ -497,3 +497,9 @@ html.reduce-motion .chaos-marquee span { padding-left: 8px; animation: none; }
 .mix-list button.now { font-weight: 800; color: var(--plum); }
 .mix-list button.now::after { content: ' ♪'; color: #c98a1a; }
 .mix-empty { text-align: center; color: #6c5a95; }
+
+/* Mixtape mini player in the taskbar (desktop) */
+.tb-mix { gap: 2px; height: 100%; align-items: center; padding-right: 4px; margin-right: 2px; border-right: 2px groove var(--os-light); }
+.tb-mix-play { font-size: 18px; min-width: 40px; }
+.tb-mix-play.on { color: var(--plum, #6c3f8f); }
+.sm-counter span { font-variant-numeric: tabular-nums; }

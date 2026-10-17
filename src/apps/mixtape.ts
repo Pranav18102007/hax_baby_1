@@ -97,7 +97,33 @@ function play(): void {
   if (player.side === 'A') playA(); else playB();
 }
 
-store.on('sound.muted', (m) => { if (player.el) player.el.muted = m; });
+store.on('sound.muted', (m) => {
+  if (player.el) player.el.muted = m;
+  if (m && player.playing) stop(); // the spec: muting pauses the Mixtape
+});
+
+function toggle(): void { if (player.playing) stop(); else play(); }
+
+/** Taskbar mini player (desktop): cassette opens the window, ▶ / ⏸ controls the same playback. */
+function mountMini(): void {
+  const tray = document.querySelector('#taskbar .tb-tray');
+  if (!tray || tray.querySelector('.tb-mix')) return;
+  const box = document.createElement('div');
+  box.className = 'tb-mix desk-only';
+  box.innerHTML = `<button type="button" class="tb-btn" data-open aria-label="Open Mixtape" data-tip="Pip's Mixtape"><img src="${url('icon-cassette', 64)}" alt="" width="22" height="22"></button>`
+    + '<button type="button" class="tb-btn tb-mix-play" data-toggle aria-label="Play lullaby"><span aria-hidden="true">▶</span></button>';
+  tray.prepend(box);
+  const btn = box.querySelector<HTMLButtonElement>('[data-toggle]')!;
+  const render = () => {
+    btn.setAttribute('aria-label', player.playing ? 'Pause' : 'Play lullaby');
+    btn.querySelector('span')!.textContent = player.playing ? '⏸' : '▶';
+    btn.classList.toggle('on', player.playing);
+  };
+  player.listeners.add(render);
+  render();
+  btn.addEventListener('click', () => { audio.play('click'); toggle(); });
+  box.querySelector('[data-open]')!.addEventListener('click', () => { audio.play('click'); bus.emit('app:open', 'mixtape'); });
+}
 
 function mount(body: HTMLElement): () => void {
   body.classList.add('mix');
@@ -142,10 +168,14 @@ const feature: Feature = {
   id: 'mixtape',
   priority: 'should',
   init() {
+    mountMini();
     bus.on('mixtape:play-random', () => { player.side = 'A'; player.index = Math.floor(Math.random() * SIDE_A.length); play(); bus.emit('app:open', 'mixtape'); });
   },
   apps: [{ id: 'mixtape', title: 'Mixtape.exe', icon: 'icon-cassette', width: 460, height: 560, mount }],
-  startMenu: [{ id: 'mixtape', label: 'Mixtape', icon: 'icon-cassette', group: 'programs', order: 4, run: () => bus.emit('app:open', 'mixtape') }],
+  startMenu: [
+    { id: 'mixtape', label: 'Mixtape', icon: 'icon-cassette', group: 'programs', order: 4, run: () => bus.emit('app:open', 'mixtape') },
+    { id: 'mixtape-mini', label: 'Play Mixtape', dynamicLabel: () => (player.playing ? '⏸ Pause Mixtape' : '▶ Play Mixtape'), icon: 'icon-cassette', group: 'main', order: 5, phoneOnly: true, run: toggle },
+  ],
 };
 
 export default feature;

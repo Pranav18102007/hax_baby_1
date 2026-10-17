@@ -66,6 +66,13 @@ export function musicBoxNote(freq: number, at?: number, dest?: AudioNode, level 
   if (!ctx) return;
   const t = at ?? ctx.currentTime;
   const out = dest ?? sfxBus!;
+  // Bad Dream Mode: every music-box note comes out a little seasick (±45 cents, sliding)
+  if (store.get('chaos.active')) {
+    const f0 = freq * 2 ** ((Math.random() * 90 - 45) / 1200);
+    tone(f0, t, { dur: 1.4, gain: level, attack: 0.002, dest: out, to: f0 * 0.94 });
+    tone(f0 * 2.03, t, { dur: 0.6, gain: level * 0.3, attack: 0.002, dest: out });
+    return;
+  }
   tone(freq, t, { dur: 1.4, gain: level, attack: 0.002, dest: out });
   tone(freq * 2, t, { dur: 0.6, gain: level * 0.3, attack: 0.002, dest: out });
   tone(freq * 4.2, t, { dur: 0.25, gain: level * 0.12, attack: 0.001, dest: out });
@@ -97,6 +104,11 @@ sounds.set('startup', (t) => [523, 659, 784, 1047].forEach((f, i) => musicBoxNot
 sounds.set('beep', (t) => tone(1046, t, { type: 'square', dur: 0.07, gain: 0.05 }));
 sounds.set('purr', (t) => { for (let i = 0; i < 10; i++) noise(t + i * 0.09, 0.08, 140, 1, 0.35, 'lowpass'); });
 sounds.set('chirp', (t) => tone(1400, t, { dur: 0.12, gain: 0.1, to: 2200 }));
+// story beats
+sounds.set('cricket', (t) => { for (let i = 0; i < 3; i++) for (let k = 0; k < 4; k++) tone(4300, t + i * 0.42 + k * 0.035, { type: 'triangle', dur: 0.025, gain: 0.035 }); });
+sounds.set('shimmer', (t) => { for (let i = 0; i < 12; i++) tone(880 * 2 ** (i / 7), t + i * 0.11, { dur: 0.5, gain: 0.03 + i * 0.004 }); });
+sounds.set('chime', (t) => { [1568, 2093, 3136].forEach((f, i) => tone(f, t + i * 0.02, { dur: 1.6, gain: 0.1 - i * 0.025, attack: 0.002 })); });
+sounds.set('twinkle', (t) => [2093, 2637, 3136, 2637, 3520].forEach((f, i) => tone(f, t + i * 0.09, { type: 'triangle', dur: 0.3, gain: 0.06 })));
 
 function applyMute(): void {
   if (!ctx || !master) return;

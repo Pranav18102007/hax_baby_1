@@ -35,6 +35,14 @@ function hydrate(): void {
   });
 }
 
+/** "Saturday night", "Friday afternoon"… in the visitor's own time. */
+function whenWas(ts: number): string {
+  const d = new Date(ts);
+  const h = d.getHours();
+  const part = h >= 21 || h < 5 ? 'night' : h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  return `${d.toLocaleDateString('en-IN', { weekday: 'long' })} ${part}`;
+}
+
 function rememberVisit(): boolean {
   const v = store.get('visitor');
   const returning = v.visits > 0;
@@ -69,13 +77,15 @@ async function start(): Promise<void> {
   initMotion();
   initRoute(routeLight);
 
+  const lastSeen = store.get('visitor').lastSeen;
   const returning = rememberVisit();
   const pip = document.getElementById('pip');
   window.setTimeout(() => {
     voice.say(returning ? 'V02' : 'V01', pip, true);
-    if (returning && store.get('visitor').secretsFound.length) {
-      window.setTimeout(() => voice.bubble('You know my secret!', pip), 3000);
-    }
+    if (!returning) return;
+    let wait = 3000;
+    if (lastSeen) { window.setTimeout(() => voice.bubble(`Last time you visited on ${whenWas(lastSeen)}!`, pip), wait); wait += 3200; }
+    if (store.get('visitor').secretsFound.length) window.setTimeout(() => voice.bubble('You know my secret!', pip), wait);
   }, 500);
 }
 
