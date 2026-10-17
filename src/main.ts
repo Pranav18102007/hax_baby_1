@@ -23,7 +23,8 @@ import { initTaskbar } from './shell/taskbar';
 import { initStartMenu } from './shell/startmenu';
 import { initTooltips } from './shell/tooltips';
 import { initHero } from './scenes/hero';
-import { initScenes } from './scenes/misc';
+import { initScenes, routeLight } from './scenes/misc';
+import { initRoute } from './scenes/route';
 import { initMotion } from './scenes/motion';
 
 function hydrate(): void {
@@ -66,6 +67,7 @@ async function start(): Promise<void> {
   initStartMenu(startItems);
   initScenes(windows);
   initMotion();
+  initRoute(routeLight);
 
   const returning = rememberVisit();
   const pip = document.getElementById('pip');

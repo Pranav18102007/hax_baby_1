@@ -84,19 +84,21 @@ function initLamps(): void {
   if (isTouch()) room.addEventListener('pointerdown', (e) => move(e.clientX, e.clientY));
 }
 
+/** Light a delivery stop (called by taps and by Pip flying past). */
+export let routeLight: (b: HTMLButtonElement) => void = () => undefined;
+
 function initRoute(): void {
   let tonight = 0;
   const out = document.querySelector<HTMLElement>('.tonight');
+  routeLight = (b) => {
+    if (b.classList.contains('done')) return;
+    b.classList.add('done');
+    tonight++;
+    if (out) out.textContent = String(tonight);
+    audio.play('chirp');
+  };
   document.querySelectorAll<HTMLButtonElement>('.stop').forEach((b) => {
-    b.addEventListener('click', () => {
-      voice.bubble(b.dataset.dream!, b);
-      if (!b.classList.contains('done')) {
-        b.classList.add('done');
-        tonight++;
-        if (out) out.textContent = String(tonight);
-        audio.play('chirp');
-      }
-    });
+    b.addEventListener('click', () => { voice.bubble(b.dataset.dream!, b); routeLight(b); });
   });
 }
 

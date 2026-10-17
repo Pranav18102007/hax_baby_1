@@ -90,11 +90,20 @@ for (const s of sizes) {
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${OUT}/${s.name}-9-chaos.png` });
   for (const b of await page.locator('.blob').all()) { await b.click({ force: true }); await page.waitForTimeout(150); }
-  await page.waitForTimeout(500);
+  await page.waitForSelector('.chaos-av', { timeout: 10000 });
+  await page.waitForTimeout(300);
   await page.screenshot({ path: `${OUT}/${s.name}-9b-antivirus.png` });
   await tap('.chaos-av [data-clean]');
   await page.waitForTimeout(1500);
   if (await page.locator('.chaos-layer').count()) problems.push(`[${s.name}] chaos did not end`);
+
+  // Delivery route: scroll through the pinned flight
+  await page.evaluate(() => document.getElementById('route')?.scrollIntoView());
+  await page.waitForTimeout(400);
+  await page.mouse.wheel(0, s.height * 0.8);
+  await page.evaluate((h) => window.scrollBy(0, h * 0.7), s.height);
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: `${OUT}/${s.name}-11-route-flight.png` });
 
   // Mixtape
   await tap('#start-btn');

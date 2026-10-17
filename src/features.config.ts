@@ -17,4 +17,5 @@ export const features: { load: () => Promise<{ default: Feature }>; on: boolean 
   { load: () => import('./features/pet'), on: true },
   { load: () => import('./features/peekers'), on: true },
   { load: () => import('./features/surprise'), on: true },
+  { load: () => import('./features/stardust'), on: true },
 ];
