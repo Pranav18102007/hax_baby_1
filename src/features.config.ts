@@ -8,4 +8,7 @@ export const features: { load: () => Promise<{ default: Feature }>; on: boolean 
   { load: () => import('./features/cursor'), on: true },
   { load: () => import('./apps/settings'), on: true },
   { load: () => import('./apps/lullaby-lab'), on: true },
+  { load: () => import('./apps/nightlights'), on: true },
+  { load: () => import('./apps/toybox'), on: true },
+  { load: () => import('./apps/guestbook'), on: true },
 ];
