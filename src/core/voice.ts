@@ -1,5 +1,6 @@
 import { announce } from './a11y';
 import { store } from './store';
+import { audio } from './audio';
 import voiceFiles from '../content/voice.json';
 
 /**
@@ -32,6 +33,49 @@ const RECORDED = new Set<string>(voiceFiles.recorded as string[]);
 const COOLDOWN_MS = 20_000;
 const lastPlayed = new Map<string, number>();
 let current: HTMLAudioElement | null = null;
+let currentSrc: AudioBufferSourceNode | null = null;
+const buffers = new Map<string, Promise<AudioBuffer | null>>();
+
+/** Decoded recording, cached. Web Audio keeps playing after the first tap on every browser (Safari blocks late HTMLAudio). */
+function buffer(id: string): Promise<AudioBuffer | null> {
+  const ctx = audio.ctx;
+  if (!ctx || !RECORDED.has(id)) return Promise.resolve(null);
+  let p = buffers.get(id);
+  if (!p) {
+    p = fetch(`/assets/voice/${id}.mp3`)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+      .then((b) => new Promise<AudioBuffer>((res, rej) => ctx.decodeAudioData(b, res, rej)))
+      .catch(() => { buffers.delete(id); return null; });
+    buffers.set(id, p);
+  }
+  return p;
+}
+
+async function play(id: string): Promise<void> {
+  const ctx = audio.ctx;
+  const out = audio.sfx;
+  if (ctx && out) {
+    if (ctx.state === 'suspended') { try { await ctx.resume(); } catch { /* ignore */ } }
+    const buf = await buffer(id);
+    if (buf && !store.get('sound.muted')) {
+      try { currentSrc?.stop(); } catch { /* already stopped */ }
+      const src = ctx.createBufferSource();
+      const g = ctx.createGain();
+      g.gain.value = 1.5; // master is 0.6, so this lands speech at ~0.9 like the old HTMLAudio volume
+      src.buffer = buf;
+      src.connect(g).connect(out);
+      src.start();
+      currentSrc = src;
+      return;
+    }
+  }
+  try {
+    current?.pause();
+    current = new Audio(`/assets/voice/${id}.mp3`);
+    current.volume = 0.9;
+    void current.play().catch(() => undefined);
+  } catch { /* ignore */ }
+}
 let bubbleTimer = 0;
 
 function bubble(text: string, anchor?: Element | null): void {
@@ -68,13 +112,10 @@ export const voice = {
     lastPlayed.set(id, now);
     bubble(text, anchor ?? document.getElementById('pip'));
     if (store.get('sound.muted') || !store.get('audio.unlocked') || !RECORDED.has(id)) return;
-    try {
-      current?.pause();
-      current = new Audio(`/assets/voice/${id}.mp3`);
-      current.volume = 0.9;
-      void current.play().catch(() => undefined);
-    } catch { /* ignore */ }
+    void play(id);
   },
+  /** Fetch + decode recordings ahead of time (called once audio is unlocked). */
+  preload(ids: string[] = [...RECORDED]): void { ids.forEach((id) => { void buffer(id); }); },
   /** Show a bubble with any text (no recording). */
   bubble(text: string, anchor?: Element | null): void { bubble(text, anchor ?? document.getElementById('pip')); },
   giggle(anchor?: Element | null): void {

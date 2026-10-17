@@ -2,6 +2,7 @@ import { audio } from '../core/audio';
 import { preload } from '../core/assets';
 import { reducedMotion } from '../core/a11y';
 import { store } from '../core/store';
+import { voice } from '../core/voice';
 
 const LINES = [
   'DreamOS 93  (c) Midnight Nursery',
@@ -57,6 +58,8 @@ export async function runBoot(critical: HTMLImageElement[]): Promise<void> {
       if (muted) store.set('sound.muted', true);
       audio.unlock();
       audio.play('startup');
+      voice.preload(['V01', 'V02', 'V03', 'V04']);
+      window.setTimeout(() => voice.preload(), 4000);
       resolve();
     };
     btn.addEventListener('click', () => go(false), { once: true });
