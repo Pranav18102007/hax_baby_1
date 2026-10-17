@@ -6,14 +6,13 @@ const KEY = 'pip:dreams';
 const SEED = 1204;
 const daily = new Ratelimit({ redis, limiter: Ratelimit.fixedWindow(1, '1 d'), prefix: 'pip:rl:hit' });
 
-export async function GET(req: Request): Promise<Response> {
+export async function GET(): Promise<Response> {
   try {
     const n = (await redis.get<number>(KEY)) ?? 0;
     return json({ dreams: SEED + n });
   } catch (e) {
     console.error('counter GET', e);
-    const why = String((e as Error)?.message ?? e).slice(0, 160);
-    return json({ error: 'asleep', why }, new URL(req.url).searchParams.has('debug') ? 200 : 503);
+    return json({ error: 'asleep' }, 503);
   }
 }
 
