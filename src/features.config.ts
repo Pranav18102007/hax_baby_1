@@ -4,5 +4,8 @@ import type { Feature } from './core/registry';
 export const features: { load: () => Promise<{ default: Feature }>; on: boolean }[] = [
   { load: () => import('./features/daynight'), on: true },
   { load: () => import('./features/display-modes'), on: true },
+  { load: () => import('./features/bathtime'), on: true },
+  { load: () => import('./features/cursor'), on: true },
   { load: () => import('./apps/settings'), on: true },
+  { load: () => import('./apps/lullaby-lab'), on: true },
 ];

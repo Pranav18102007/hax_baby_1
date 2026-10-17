@@ -36,8 +36,10 @@ for (const s of sizes) {
   await page.screenshot({ path: `${OUT}/${s.name}-1-hero.png` });
   await tap('#pip');
   await tap('.letter');
-  await tap('#tb-theme');
-  await page.waitForTimeout(700);
+  await page.locator('#tb-theme').click({ force: true });
+  await page.waitForTimeout(450);
+  await page.screenshot({ path: `${OUT}/${s.name}-1a-bath.png` });
+  await page.waitForTimeout(1600);
   await page.screenshot({ path: `${OUT}/${s.name}-1b-hero-day.png` });
   await tap('#tb-theme');
   await tap('#start-btn');
@@ -58,6 +60,17 @@ for (const s of sizes) {
   await page.waitForTimeout(600);
   await tap('.light-all');
   await page.screenshot({ path: `${OUT}/${s.name}-5-lamps.png` });
+
+  // Lullaby Lab
+  await page.evaluate(() => document.querySelector('[data-room="lab"]')?.scrollIntoView());
+  await page.waitForTimeout(500);
+  await tap('[data-room="lab"] .os-button[data-open]');
+  await page.waitForTimeout(700);
+  await tap('.win [data-wind]');
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: `${OUT}/${s.name}-7-lab.png` });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
 
   // Settings window
   await tap('#start-btn');

@@ -282,3 +282,5 @@
 .credits { max-width: 700px; margin: 12px auto 0; text-align: left; }
 .credits summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; font-family: var(--font-pixel); font-size: 22px; color: var(--gold); }
 .credits ul { padding-left: 20px; }
+
+.dome-flash { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; background: radial-gradient(circle, #fffbe8 0%, rgba(255, 225, 160, 0.85) 40%, rgba(255, 225, 160, 0) 75%); }

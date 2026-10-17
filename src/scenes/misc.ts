@@ -6,6 +6,7 @@ import { store } from '../core/store';
 import { voice } from '../core/voice';
 import type { WindowManager } from '../core/windows';
 import { setFace, sparkleBurst } from './hero';
+import { scrollToEl } from '../core/scroll';
 
 /** Track which scene is on screen → store 'section.current' (cursor, theme hooks use it). */
 function initSections(): void {
@@ -148,7 +149,7 @@ function initDawn(): void {
 
   document.getElementById('back-top')?.addEventListener('click', (e) => {
     e.preventDefault();
-    document.getElementById('hero')?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' });
+    scrollToEl('#hero');
     window.setTimeout(() => setFace('happy', 1500), 800);
   });
 }

@@ -2,6 +2,7 @@ import { audio } from '../core/audio';
 import { url } from '../core/assets';
 import { isPhone, trapFocus } from '../core/a11y';
 import type { StartItem } from '../core/registry';
+import { scrollToEl } from '../core/scroll';
 
 /** Scene shortcuts are built in; everything else comes from features via the registry. */
 const SCENES: [string, string][] = [
@@ -46,7 +47,7 @@ export function initStartMenu(items: StartItem[]): void {
     list.replaceChildren();
     list.append(heading('Go to'));
     for (const [id, label] of SCENES) {
-      list.append(row(label, undefined, () => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), { cls: 'sm-scene' }));
+      list.append(row(label, undefined, () => scrollToEl(`#${id}`), { cls: 'sm-scene' }));
     }
     const byGroup = (g: StartItem['group']) => items.filter((i) => i.group === g).sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
     const programs = byGroup('programs');

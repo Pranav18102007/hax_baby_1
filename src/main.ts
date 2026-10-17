@@ -24,6 +24,7 @@ import { initStartMenu } from './shell/startmenu';
 import { initTooltips } from './shell/tooltips';
 import { initHero } from './scenes/hero';
 import { initScenes } from './scenes/misc';
+import { initMotion } from './scenes/motion';
 
 function hydrate(): void {
   hydrateImages();
@@ -64,6 +65,7 @@ async function start(): Promise<void> {
   initTaskbar(windows, apps, () => bus.emit('theme:toggle'));
   initStartMenu(startItems);
   initScenes(windows);
+  initMotion();
 
   const returning = rememberVisit();
   const pip = document.getElementById('pip');
