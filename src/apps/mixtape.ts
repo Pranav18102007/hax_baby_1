@@ -1,0 +1,150 @@
+import type { Feature } from '../core/registry';
+import { bus } from '../core/bus';
+import { store } from '../core/store';
+import { audio } from '../core/audio';
+import { url } from '../core/assets';
+import { CLASSICS, freq, makeMelody, makeReverb, musicBoxNote, semitoneFreq, type ScaleId } from '../core/music';
+
+/**
+ * Pip's Mixtape. Side A: music-box lullabies (generated + public domain).
+ * Side B: Pip's Silly Tapes (voice outtakes, listed here as files land).
+ * Playback lives at module level, so music keeps going after the window closes.
+ */
+
+interface Track { title: string; play: (at: number, i: number) => number | null; length: number; bpm: number }
+
+function generated(title: string, seed: number, scale: ScaleId, bpm: number): Track {
+  const mel = makeMelody(seed, scale, 32);
+  return { title, bpm, length: mel.length, play: (_at, i) => { const d = mel[i]; return d === null ? null : freq(d, scale); } };
+}
+function classic(id: keyof typeof CLASSICS): Track {
+  const c = CLASSICS[id];
+  return { title: c.title, bpm: c.bpm, length: c.notes.length, play: (_at, i) => { const s = c.notes[i]; return s === null ? null : semitoneFreq(s); } };
+}
+
+const SIDE_A: Track[] = [
+  generated('Moonlight', 1204, 'moonlight', 72),
+  classic('brahms'),
+  generated('Rainy Window', 777, 'rainy', 64),
+  classic('twinkle'),
+  generated('Star Count', 4041, 'starry', 80),
+];
+/** Recorded outtakes in /public/assets/voice/outtakes (add filenames as they land). */
+const SIDE_B: { title: string; file: string }[] = [];
+
+const player = {
+  side: 'A' as 'A' | 'B',
+  index: 0,
+  playing: false,
+  timer: 0,
+  step: 0,
+  next: 0,
+  verb: null as ReturnType<typeof makeReverb>,
+  el: null as HTMLAudioElement | null,
+  listeners: new Set<() => void>(),
+  emit() { this.listeners.forEach((f) => f()); },
+};
+
+function stop(): void {
+  window.clearInterval(player.timer);
+  player.el?.pause();
+  player.playing = false;
+  player.emit();
+}
+
+function playA(): void {
+  const ctx = audio.ctx;
+  if (!ctx || !audio.music) return;
+  if (!player.verb) { player.verb = makeReverb(audio.music); if (player.verb) { player.verb.wet.gain.value = 0.5; player.verb.dry.gain.value = 0.8; } }
+  const t = SIDE_A[player.index];
+  player.step = 0;
+  player.next = ctx.currentTime + 0.05;
+  player.playing = true;
+  window.clearInterval(player.timer);
+  player.timer = window.setInterval(() => {
+    const beat = 60 / t.bpm / 2;
+    while (player.next < ctx.currentTime + 0.12) {
+      if (player.step >= t.length * 2) { // each track plays twice, then the next one starts
+        player.index = (player.index + 1) % SIDE_A.length;
+        player.emit();
+        playA();
+        return;
+      }
+      const f = t.play(player.next, player.step % t.length);
+      if (f && !store.get('sound.muted')) musicBoxNote(f, player.next, player.verb?.input, 0.2);
+      player.step++;
+      player.next += beat;
+    }
+  }, 25);
+  player.emit();
+}
+
+function playB(): void {
+  const t = SIDE_B[player.index];
+  if (!t) return;
+  player.el?.pause();
+  player.el = new Audio(`/assets/voice/outtakes/${t.file}`);
+  player.el.muted = store.get('sound.muted');
+  player.el.addEventListener('ended', () => { player.index = (player.index + 1) % SIDE_B.length; playB(); });
+  void player.el.play().catch(() => undefined);
+  player.playing = true;
+  player.emit();
+}
+
+function play(): void {
+  audio.unlock();
+  if (player.side === 'A') playA(); else playB();
+}
+
+store.on('sound.muted', (m) => { if (player.el) player.el.muted = m; });
+
+function mount(body: HTMLElement): () => void {
+  body.classList.add('mix');
+  const render = () => {
+    const tracks = player.side === 'A' ? SIDE_A.map((t) => t.title) : SIDE_B.map((t) => t.title);
+    body.innerHTML = `
+      <div class="mix-tape ${player.playing ? 'spin' : ''}">
+        <img src="${url('cassette', 1024)}" alt="" draggable="false">
+        <span class="reel r1" aria-hidden="true"></span><span class="reel r2" aria-hidden="true"></span>
+        <span class="mix-label">PIP'S MIXTAPE — SIDE ${player.side}</span>
+      </div>
+      <div class="mix-controls">
+        <button type="button" class="os-button" data-prev aria-label="Previous track">⏮</button>
+        <button type="button" class="os-button" data-play aria-pressed="${player.playing}">${player.playing ? '⏸ Pause' : '▶ Play'}</button>
+        <button type="button" class="os-button" data-next aria-label="Next track">⏭</button>
+        <button type="button" class="os-button" data-flip>Flip tape</button>
+      </div>
+      <label class="mix-vol">Music volume <input type="range" min="0" max="100" value="${Math.round((audio.music?.gain.value ?? 0.7) * 100)}" data-vol></label>
+      ${tracks.length ? `<ol class="mix-list">${tracks.map((t, i) => `<li><button type="button" class="${i === player.index ? 'now' : ''}" data-track="${i}">${t}</button></li>`).join('')}</ol>`
+        : '<p class="mix-empty">Side B: Pip\'s Silly Tapes are still being recorded. Check back soon!</p>'}`;
+  };
+  render();
+  player.listeners.add(render);
+  body.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLElement>('button');
+    if (!t) return;
+    const list = player.side === 'A' ? SIDE_A.length : SIDE_B.length;
+    if (t.matches('[data-play]')) player.playing ? stop() : play();
+    else if (t.matches('[data-next]') && list) { player.index = (player.index + 1) % list; if (player.playing) play(); else player.emit(); }
+    else if (t.matches('[data-prev]') && list) { player.index = (player.index - 1 + list) % list; if (player.playing) play(); else player.emit(); }
+    else if (t.matches('[data-flip]')) { stop(); player.side = player.side === 'A' ? 'B' : 'A'; player.index = 0; audio.play('beep'); player.emit(); }
+    else if (t.dataset.track) { player.index = Number(t.dataset.track); play(); }
+  });
+  body.addEventListener('input', (e) => {
+    const r = e.target as HTMLInputElement;
+    if (r.matches('[data-vol]') && audio.music) audio.music.gain.value = Number(r.value) / 100;
+  });
+  return () => player.listeners.delete(render);
+}
+
+const feature: Feature = {
+  id: 'mixtape',
+  priority: 'should',
+  init() {
+    bus.on('mixtape:play-random', () => { player.side = 'A'; player.index = Math.floor(Math.random() * SIDE_A.length); play(); bus.emit('app:open', 'mixtape'); });
+  },
+  apps: [{ id: 'mixtape', title: 'Mixtape.exe', icon: 'icon-cassette', width: 460, height: 560, mount }],
+  startMenu: [{ id: 'mixtape', label: 'Mixtape', icon: 'icon-cassette', group: 'programs', order: 4, run: () => bus.emit('app:open', 'mixtape') }],
+};
+
+export default feature;

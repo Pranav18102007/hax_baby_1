@@ -11,4 +11,10 @@ export const features: { load: () => Promise<{ default: Feature }>; on: boolean 
   { load: () => import('./apps/nightlights'), on: true },
   { load: () => import('./apps/toybox'), on: true },
   { load: () => import('./apps/guestbook'), on: true },
+  { load: () => import('./apps/mixtape'), on: true },
+  { load: () => import('./features/secrets'), on: true },
+  { load: () => import('./features/bad-dream'), on: true },
+  { load: () => import('./features/pet'), on: true },
+  { load: () => import('./features/peekers'), on: true },
+  { load: () => import('./features/surprise'), on: true },
 ];
