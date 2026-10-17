@@ -10,8 +10,9 @@ export async function GET(): Promise<Response> {
   try {
     const n = (await redis.get<number>(KEY)) ?? 0;
     return json({ dreams: SEED + n });
-  } catch {
-    return json({ error: 'asleep' }, 503);
+  } catch (e) {
+    console.error('counter GET', e);
+    return json({ error: 'asleep', why: String((e as Error)?.message ?? e).slice(0, 120) }, 503);
   }
 }
 
@@ -20,7 +21,8 @@ export async function POST(req: Request): Promise<Response> {
     const { success } = await daily.limit(ipOf(req));
     const n = success ? await redis.incr(KEY) : (await redis.get<number>(KEY)) ?? 0;
     return json({ dreams: SEED + n });
-  } catch {
+  } catch (e) {
+    console.error('counter POST', e);
     return json({ error: 'asleep' }, 503);
   }
 }
