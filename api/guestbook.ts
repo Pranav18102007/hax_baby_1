@@ -1,5 +1,5 @@
 import { Ratelimit } from '@upstash/ratelimit';
-import { redis, json, ipOf } from './_shared';
+import { redis, json, ipOf } from './_shared.js';
 
 /** The dream guestbook. Stored as plain text; the frontend renders with textContent only. */
 const LIST = 'pip:wishes';

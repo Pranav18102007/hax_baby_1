@@ -1,5 +1,5 @@
 import { Ratelimit } from '@upstash/ratelimit';
-import { redis, json, ipOf } from './_shared';
+import { redis, json, ipOf } from './_shared.js';
 
 /** GET: read the dream counter. POST: count one visit (max once per IP per day). */
 const KEY = 'pip:dreams';
