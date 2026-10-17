@@ -3,6 +3,7 @@ import { bus } from '../core/bus';
 import { store } from '../core/store';
 import { audio } from '../core/audio';
 import { url } from '../core/assets';
+import voiceFiles from '../content/voice.json';
 import { CLASSICS, freq, makeMelody, makeReverb, musicBoxNote, semitoneFreq, type ScaleId } from '../core/music';
 
 /**
@@ -30,7 +31,7 @@ const SIDE_A: Track[] = [
   generated('Star Count', 4041, 'starry', 80),
 ];
 /** Recorded outtakes in /public/assets/voice/outtakes (add filenames as they land). */
-const SIDE_B: { title: string; file: string }[] = [];
+const SIDE_B: { title: string; file: string }[] = voiceFiles.outtakes as { title: string; file: string }[];
 
 const player = {
   side: 'A' as 'A' | 'B',

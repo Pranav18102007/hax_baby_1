@@ -1,5 +1,6 @@
 import { announce } from './a11y';
 import { store } from './store';
+import voiceFiles from '../content/voice.json';
 
 /**
  * Pip's voice: each line plays its recording (when we have it and sound is on)
@@ -25,8 +26,8 @@ export const LINES: Record<string, string> = {
   V12e: 'hehe… fine.',
 };
 
-/** Recordings that exist in /public/assets/voice. Add ids here as files land (avoids 404s). */
-const RECORDED = new Set<string>([]);
+/** Recordings that exist in /public/assets/voice (written by scripts/process_voice.sh, so no 404s). */
+const RECORDED = new Set<string>(voiceFiles.recorded as string[]);
 
 const COOLDOWN_MS = 20_000;
 const lastPlayed = new Map<string, number>();
