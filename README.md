@@ -33,7 +33,7 @@ We built it in 48 hours as a team of three: **Anushka Bhalekar** designed the wo
 - Real buttons and form controls, visible focus, Esc closes things, `M` mutes, `D` toggles day/night.
 - Pip's speech bubbles are announced to screen readers; sound never plays before you tap.
 - Respects *reduced motion* (and has its own setting): scenes crossfade, nothing shakes.
-- axe-core: no WCAG 2.1 A/AA violations. Lighthouse: mobile 95/100/100, desktop 100/100/100 (performance / accessibility / best practices).
+- axe-core: no WCAG 2.1 A/AA violations. Lighthouse: mobile 95/100/100, desktop 99/100/100 (performance / accessibility / best practices).
 - Zero console errors: a Playwright script clicks through the site at phone, tablet and desktop sizes before every deploy.
 
 ## Run it
