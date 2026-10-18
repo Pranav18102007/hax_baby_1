@@ -48,13 +48,91 @@ export function makeMelody(seed: number, scale: ScaleId, length = 16): (number |
   return out;
 }
 
-/** Public-domain melodies as scale-free semitone offsets from C5 (null = rest). */
-export const CLASSICS: Record<string, { title: string; notes: (number | null)[]; bpm: number }> = {
-  brahms: { title: "Brahms' Lullaby", bpm: 84, notes: [4, 4, 7, null, 4, 4, 7, null, 4, 7, 12, 11, 9, 9, 7, null, 2, 4, 5, 2, 2, 4, 5, null, 2, 5, 11, 9, 7, 11, 12, null] },
-  twinkle: { title: 'Twinkle Twinkle', bpm: 96, notes: [0, 0, 7, 7, 9, 9, 7, null, 5, 5, 4, 4, 2, 2, 0, null] },
-};
-
 export function semitoneFreq(s: number, root = ROOT): number { return root * Math.pow(2, s / 12); }
+
+/**
+ * Real nursery rhymes and lullabies (all traditional / public domain), as [semitones from C5, beats] pairs.
+ * `meter` = beats per bar, used to pick a soft chord for each bar underneath the music box.
+ */
+export type Note = [number | null, number];
+export interface Song { id: string; title: string; bpm: number; meter: number; notes: Note[] }
+
+const C = 0, D = 2, E = 4, F = 5, G = 7, A = 9, B = 11, C2 = 12, G0 = -5;
+const run = (beats: number, ...ns: (number | null)[]): Note[] => ns.map((n) => [n, beats]);
+
+export const SONGS: Song[] = [
+  { id: 'twinkle', title: 'Twinkle, Twinkle, Little Star', bpm: 92, meter: 4, notes: [
+    ...run(1, C, C, G, G, A, A), [G, 2], ...run(1, F, F, E, E, D, D), [C, 2],
+    ...run(1, G, G, F, F, E, E), [D, 2], ...run(1, G, G, F, F, E, E), [D, 2],
+    ...run(1, C, C, G, G, A, A), [G, 2], ...run(1, F, F, E, E, D, D), [C, 2]] },
+  { id: 'brahms', title: "Brahms' Lullaby", bpm: 78, meter: 3, notes: [
+    [E, 0.5], [E, 0.5], [G, 2], [E, 0.5], [E, 0.5], [G, 2], [E, 0.5], [G, 0.5], [C2, 1], [B, 1.5], [A, 0.5], [A, 1], [G, 1],
+    [D, 0.5], [E, 0.5], [F, 1], [D, 1], [D, 0.5], [E, 0.5], [F, 2], [D, 0.5], [F, 0.5], [B, 0.5], [A, 0.5], [G, 1], [B, 1], [C2, 2], [null, 1]] },
+  { id: 'mary', title: 'Mary Had a Little Lamb', bpm: 104, meter: 4, notes: [
+    ...run(1, E, D, C, D, E, E), [E, 2], ...run(1, D, D), [D, 2], [E, 1], [G, 1], [G, 2],
+    ...run(1, E, D, C, D, E, E, E, E, D, D, E, D), [C, 4]] },
+  { id: 'jacques', title: 'Frère Jacques', bpm: 100, meter: 4, notes: [
+    ...run(1, C, D, E, C, C, D, E, C, E, F), [G, 2], ...run(1, E, F), [G, 2],
+    ...run(0.5, G, A, G, F), ...run(1, E, C), ...run(0.5, G, A, G, F), ...run(1, E, C),
+    [C, 1], [G0, 1], [C, 2], [C, 1], [G0, 1], [C, 2]] },
+  { id: 'rowboat', title: 'Row, Row, Row Your Boat', bpm: 100, meter: 3, notes: [
+    [C, 1.5], [C, 1.5], [C, 1], [D, 0.5], [E, 1.5], [E, 1], [D, 0.5], [E, 1], [F, 0.5], [G, 3],
+    ...run(0.5, C2, C2, C2, G, G, G, E, E, E, C, C, C), [G, 1], [F, 0.5], [E, 1], [D, 0.5], [C, 3]] },
+  { id: 'london', title: 'London Bridge', bpm: 108, meter: 4, notes: [
+    [G, 1.5], [A, 0.5], [G, 1], [F, 1], [E, 1], [F, 1], [G, 2], [D, 1], [E, 1], [F, 2], [E, 1], [F, 1], [G, 2],
+    [G, 1.5], [A, 0.5], [G, 1], [F, 1], [E, 1], [F, 1], [G, 2], [D, 2], [G, 2], [E, 1], [C, 3]] },
+  { id: 'buns', title: 'Hot Cross Buns', bpm: 96, meter: 4, notes: [
+    [E, 1], [D, 1], [C, 2], [E, 1], [D, 1], [C, 2], ...run(0.5, C, C, C, C, D, D, D, D), [E, 1], [D, 1], [C, 2]] },
+];
+
+const CHORDS: { root: number; tones: number[] }[] = [
+  { root: 0, tones: [0, 4, 7] }, { root: 5, tones: [5, 9, 0] }, { root: 7, tones: [7, 11, 2] }, { root: 9, tones: [9, 0, 4] },
+];
+
+/** One chord per bar: the one whose notes cover most of that bar's melody (C on the first and last bar). */
+export function chordsFor(song: Song): { at: number; root: number; tones: number[] }[] {
+  const bars: Map<number, Map<number, number>> = new Map();
+  let t = 0;
+  for (const [n, d] of song.notes) {
+    if (n !== null) {
+      const bar = Math.floor(t / song.meter);
+      const pc = ((n % 12) + 12) % 12;
+      const m = bars.get(bar) ?? new Map<number, number>();
+      m.set(pc, (m.get(pc) ?? 0) + d);
+      bars.set(bar, m);
+    }
+    t += d;
+  }
+  const last = Math.floor((t - 0.01) / song.meter);
+  const out: { at: number; root: number; tones: number[] }[] = [];
+  for (let bar = 0; bar <= last; bar++) {
+    const m = bars.get(bar) ?? new Map();
+    let best = CHORDS[0], score = -1;
+    for (const c of CHORDS) {
+      let s = 0;
+      m.forEach((w, pc) => { if (c.tones.includes(pc)) s += w; });
+      if (bar === 0 || bar === last) s += c.root === 0 ? 0.6 : 0;
+      if (s > score) { score = s; best = c; }
+    }
+    out.push({ at: bar * song.meter, root: best.root, tones: best.tones });
+  }
+  return out;
+}
+
+/** A soft pad note (warm sine with a slow swell) for the chords under the music box. */
+export function padNote(f: number, at: number, dur: number, dest: AudioNode, level = 0.05): void {
+  const ctx = audio.ctx;
+  if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+  o.type = 'triangle'; o.frequency.value = f;
+  lp.type = 'lowpass'; lp.frequency.value = 900;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(level, at + Math.min(0.4, dur * 0.3));
+  g.gain.setValueAtTime(level, at + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.3);
+  o.connect(lp).connect(g).connect(dest);
+  o.start(at); o.stop(at + dur + 0.35);
+}
 
 /** A soft generated-impulse reverb. Returns { input, wet } nodes wired to `dest`. */
 export function makeReverb(dest: AudioNode): { input: GainNode; dry: GainNode; wet: GainNode; dispose: () => void } | null {

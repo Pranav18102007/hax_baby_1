@@ -6,6 +6,7 @@ import { voice } from '../core/voice';
 import { url } from '../core/assets';
 import { announce, reducedMotion, trapFocus } from '../core/a11y';
 import { musicBoxNote } from '../core/music';
+import { decorateCrib } from './crib-extras';
 
 /**
  * The Easter egg. Two ways in, one secret room:
@@ -67,6 +68,7 @@ function openCrib(origin?: Element | null): void {
       </div>
     </div>`;
   document.body.appendChild(el);
+  const undecorate = decorateCrib(el);
   document.body.classList.add('sheet-open');
   const untrap = trapFocus(el);
   requestAnimationFrame(() => el.classList.add('in'));
@@ -86,6 +88,7 @@ function openCrib(origin?: Element | null): void {
     if (!open) return;
     open = false;
     untrap();
+    undecorate();
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('popstate', onPop);
     el.classList.remove('in');
@@ -94,7 +97,13 @@ function openCrib(origin?: Element | null): void {
     window.setTimeout(() => el.remove(), reducedMotion() ? 0 : 450);
     opener?.focus?.({ preventScroll: true });
   };
-  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape') return;
+    const game = el.querySelector('.dream-game'), letter = el.querySelector<HTMLElement>('.crib-letter:not([hidden])');
+    if (game) { game.remove(); return; } // Esc closes the game or the note first, then the room
+    if (letter) { letter.hidden = true; return; }
+    close();
+  };
   // phone back gesture closes the room instead of leaving the site
   const onPop = () => close();
   try { history.pushState({ crib: true }, ''); } catch { /* ignore */ }

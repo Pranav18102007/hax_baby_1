@@ -124,13 +124,22 @@ function start(): void {
   }
 
   function clean(): void {
-    const fly = document.createElement('div');
-    fly.className = 'av-fly';
-    fly.innerHTML = `<img src="${url('unicorn', 512)}" alt="">`;
-    document.body.appendChild(fly);
+    // a full-screen rainbow wave sweeps the nightmare away, with the unicorn riding its front edge
+    const wave = document.createElement('div');
+    wave.className = 'rainbow-wave';
+    wave.setAttribute('aria-hidden', 'true');
+    const bits = Array.from({ length: 36 }, (_, i) => `<i style="--x:${Math.random() * 100}%;--y:${Math.random() * 100}%;--d:${(i % 9) * -0.18}s;--s:${10 + Math.random() * 22}px">${['✦', '★', '♥', '✧'][i % 4]}</i>`).join('');
+    const puffs = Array.from({ length: 7 }, (_, i) => `<b style="--y:${8 + i * 13}%;--s:${70 + Math.random() * 70}px"></b>`).join('');
+    wave.innerHTML = `<div class="rw-band"><div class="rw-stripes"></div><div class="rw-glitter">${bits}</div><div class="rw-puffs">${puffs}</div><img class="rw-unicorn" src="${url('unicorn', 512)}" alt=""></div>`;
+    document.body.appendChild(wave);
+    voice.say('V21', null, true);
     audio.play('sparkle');
-    window.setTimeout(() => { end(); voice.say('V08', null, true); }, calm ? 0 : 900);
-    window.setTimeout(() => fly.remove(), calm ? 0 : 1800);
+    window.setTimeout(() => audio.play('shimmer'), 300);
+    const mid = calm ? 0 : 1400, total = calm ? 600 : 2900;
+    window.setTimeout(() => { end(); audio.play('chime'); }, mid);
+    window.setTimeout(() => { voice.say('V08', null, true); }, mid + 900);
+    window.setTimeout(() => wave.remove(), total);
+    if (calm) wave.classList.add('calm');
   }
 
   function end(): void {

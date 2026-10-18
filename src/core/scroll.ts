@@ -12,3 +12,9 @@ export function scrollToEl(target: Element | string): void {
   if (lenis && !reducedMotion()) lenis.scrollTo(el);
   else el.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' });
 }
+
+/** Scroll the page to a y position (immediate while dragging the ladder). */
+export function scrollToY(y: number, immediate = false): void {
+  if (lenis && !reducedMotion()) lenis.scrollTo(y, { immediate });
+  else window.scrollTo({ top: y, behavior: immediate || reducedMotion() ? 'auto' : 'smooth' });
+}

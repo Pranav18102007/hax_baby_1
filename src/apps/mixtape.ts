@@ -4,7 +4,7 @@ import { store } from '../core/store';
 import { audio } from '../core/audio';
 import { url } from '../core/assets';
 import voiceFiles from '../content/voice.json';
-import { CLASSICS, freq, makeMelody, makeReverb, musicBoxNote, semitoneFreq, type ScaleId } from '../core/music';
+import { SONGS, chordsFor, freq, makeMelody, makeReverb, musicBoxNote, padNote, semitoneFreq, type Song, type ScaleId } from '../core/music';
 
 /**
  * Pip's Mixtape. Side A: music-box lullabies (generated + public domain).
@@ -12,24 +12,27 @@ import { CLASSICS, freq, makeMelody, makeReverb, musicBoxNote, semitoneFreq, typ
  * Playback lives at module level, so music keeps going after the window closes.
  */
 
-interface Track { title: string; play: (at: number, i: number) => number | null; length: number; bpm: number }
+/** A track = timed notes (in beats) plus a chord per bar, played on the music box with a soft pad underneath. */
+interface Ev { at: number; f: number; dur: number }
+interface Track { title: string; bpm: number; length: number; notes: Ev[]; chords: { at: number; fs: number[]; bass: number }[] }
+
+function fromSong(song: Song): Track {
+  let t = 0;
+  const notes: Ev[] = [];
+  for (const [n, d] of song.notes) { if (n !== null) notes.push({ at: t, f: semitoneFreq(n), dur: d }); t += d; }
+  const chords = chordsFor(song).map((c) => ({ at: c.at, fs: c.tones.map((pc) => semitoneFreq(pc - 12)), bass: semitoneFreq(c.root - 24) }));
+  return { title: song.title, bpm: song.bpm, length: Math.ceil(t / song.meter) * song.meter, notes, chords };
+}
 
 function generated(title: string, seed: number, scale: ScaleId, bpm: number): Track {
   const mel = makeMelody(seed, scale, 32);
-  return { title, bpm, length: mel.length, play: (_at, i) => { const d = mel[i]; return d === null ? null : freq(d, scale); } };
-}
-function classic(id: keyof typeof CLASSICS): Track {
-  const c = CLASSICS[id];
-  return { title: c.title, bpm: c.bpm, length: c.notes.length, play: (_at, i) => { const s = c.notes[i]; return s === null ? null : semitoneFreq(s); } };
+  const notes: Ev[] = [];
+  mel.forEach((d, i) => { if (d !== null) notes.push({ at: i * 0.5, f: freq(d, scale), dur: 0.5 }); });
+  const chords = Array.from({ length: 4 }, (_, i) => ({ at: i * 4, fs: [semitoneFreq(-12), semitoneFreq(-8), semitoneFreq(-5)], bass: semitoneFreq(-24) }));
+  return { title, bpm, length: 16, notes, chords };
 }
 
-const SIDE_A: Track[] = [
-  generated('Moonlight', 1204, 'moonlight', 72),
-  classic('brahms'),
-  generated('Rainy Window', 777, 'rainy', 64),
-  classic('twinkle'),
-  generated('Star Count', 4041, 'starry', 80),
-];
+const SIDE_A: Track[] = [...SONGS.map(fromSong), generated("Pip's own: Moonlight", 1204, 'moonlight', 72)];
 /** Recorded outtakes in /public/assets/voice/outtakes (add filenames as they land). */
 const SIDE_B: { title: string; file: string }[] = voiceFiles.outtakes as { title: string; file: string }[];
 
@@ -58,23 +61,34 @@ function playA(): void {
   if (!ctx || !audio.music) return;
   if (!player.verb) { player.verb = makeReverb(audio.music); if (player.verb) { player.verb.wet.gain.value = 0.5; player.verb.dry.gain.value = 0.8; } }
   const t = SIDE_A[player.index];
-  player.step = 0;
-  player.next = ctx.currentTime + 0.05;
+  const spb = 60 / t.bpm; // seconds per beat
+  const start = ctx.currentTime + 0.08;
+  let ni = 0, ci = 0, loops = 0;
   player.playing = true;
   window.clearInterval(player.timer);
   player.timer = window.setInterval(() => {
-    const beat = 60 / t.bpm / 2;
-    while (player.next < ctx.currentTime + 0.12) {
-      if (player.step >= t.length * 2) { // each track plays twice, then the next one starts
+    const horizon = ctx.currentTime + 0.15;
+    const base = start + loops * t.length * spb;
+    while (ci < t.chords.length && base + t.chords[ci].at * spb < horizon) {
+      const c = t.chords[ci++];
+      const at = base + c.at * spb, len = (t.chords[ci]?.at ?? t.length) - c.at;
+      if (!store.get('sound.muted') && player.verb) {
+        c.fs.forEach((f) => padNote(f, at, len * spb, player.verb!.input, 0.035));
+        padNote(c.bass, at, Math.min(len, 2) * spb, player.verb.input, 0.06);
+      }
+    }
+    while (ni < t.notes.length && base + t.notes[ni].at * spb < horizon) {
+      const n = t.notes[ni++];
+      if (!store.get('sound.muted')) musicBoxNote(n.f, base + n.at * spb, player.verb?.input, 0.2);
+    }
+    if (ni >= t.notes.length && ci >= t.chords.length && ctx.currentTime > base + t.length * spb - 0.1) {
+      if (++loops >= 2) { // each song plays twice, then the next one starts
         player.index = (player.index + 1) % SIDE_A.length;
         player.emit();
         playA();
         return;
       }
-      const f = t.play(player.next, player.step % t.length);
-      if (f && !store.get('sound.muted')) musicBoxNote(f, player.next, player.verb?.input, 0.2);
-      player.step++;
-      player.next += beat;
+      ni = 0; ci = 0;
     }
   }, 25);
   player.emit();

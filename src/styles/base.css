@@ -57,3 +57,4 @@ html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after 
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+html { cursor: var(--cur, auto); }
