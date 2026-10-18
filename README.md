@@ -23,7 +23,9 @@ We built it in 48 hours as a team of three: **Anushka Bhalekar** designed the wo
 | **Tier 2** | Lullaby Lab with real Web Audio · lantern flashlight cursor in the dark gallery · delivery map path synced to scroll · physics toy box |
 | **Tier 3** | Live guestbook (serverless + Redis) · remembers returning visitors · ~100 Lighthouse |
 | **Side quests** | Guestbook · section-aware sparkle cursor trail · hit-counter odometer · click sounds with an always-visible mute · Responsive Chaos Mode (Bad Dream Mode) |
-| **Extras** | DreamOS taskbar, Start menu and draggable springy windows · CRT / LCD / 1-bit display modes · ghost-kitten desktop pet · peeking ghosts · Mixtape player · Bath Time · "I'm feeling sleepy" |
+| **Extras** | DreamOS boot screen, taskbar, Start menu and draggable springy windows · CRT / LCD / 1-bit display modes · desktop pets (ghost kitten, moon bunny, sleepy bat) · peeking ghosts · Mixtape of real nursery rhymes · Bath Time · "I'm feeling sleepy" · a teddy that climbs the scroll-bar ladder (parachute down, rocket up) · a pixel cursor for every scene |
+| **The story** | Scroll-told and reversible (scroll back and the star flies home), with one thing to do in each chapter: knock on the sleepless ghosts' windows, reach the little hand up to the Moon, wish on the falling star, tuck the ghosts in |
+| **Secrets & toys** | Secret Crib (portal or the SILENCE code) with a musical mobile, wish jar, a note from Pip and the *Catch the Falling Dreams* mini-game · Konami code star party · Ask Pip chat · Stickers & sticky notes · Bad Dream Bin · unicorn rainbow wave · project case files · free wallpapers · Pip's Webring |
 
 ## Accessibility and performance
 
@@ -59,8 +61,8 @@ The guestbook and counter use Vercel Functions (`/api`) with Upstash Redis. Set 
 
 - **Team:** Anushka Bhalekar (design, art direction, voice) and Pranav Shinde (build), with guidance from Atharva Baodhankar.
 - **Pip** and the original asset pack: [haX.baby](https://hax.baby/baby-problem) (Track 1 canon).
-- **All other artwork:** generated with ChatGPT image generation from our own prompts, art-directed from the official Pip references.
+- **All other artwork:** generated with ChatGPT image generation from our own prompts and art-directed by Anushka Bhalekar from the official Pip references (backgrounds, props, the teddy, pets, cursors).
 - **Voice of Pip:** every line recorded by Anushka Bhalekar, lightly cleaned up with AI audio editing (ChatGPT), then pitched and levelled in our build script.
 - **Code:** [GSAP](https://gsap.com) (Standard License, free), [Lenis](https://github.com/darkroomengineering/lenis) (MIT), [Matter.js](https://github.com/liabru/matter-js) (MIT), [Upstash](https://upstash.com) SDKs (MIT).
 - **Fonts:** Lilita One, Nunito and VT323 via Fontsource (SIL Open Font License).
-- **Melodies:** Brahms' Lullaby and Twinkle Twinkle Little Star (public domain), played on a synthesized music box.
+- **Melodies:** traditional nursery rhymes and lullabies, all public domain (Twinkle Twinkle, Brahms' Lullaby, Mary Had a Little Lamb, Frère Jacques, Row Row Row Your Boat, London Bridge, Hot Cross Buns), played on a synthesized music box with soft chords.

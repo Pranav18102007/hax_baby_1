@@ -7,6 +7,8 @@
   <meta name="description" content="Pip's portfolio: a sleepy skull baby who builds the dreams you fall asleep inside. Made for haX.baby's Baby's First Website.">
   <meta name="theme-color" content="#1e1b3a">
   <link rel="icon" href="/assets/img/pip-pixel-64.webp" type="image/webp">
+  <link rel="preload" href="/fonts/vt323-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/lilita-one-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="booting">
   <a class="skip-link" href="#hero">Skip to Pip</a>
@@ -15,9 +17,9 @@
   <div id="boot" role="dialog" aria-modal="true" aria-labelledby="boot-title">
     <div class="boot-sky" aria-hidden="true">
       <span class="boot-moon"></span>
-      <img class="boot-ghost bg1" data-img="ghost-plain" data-want="128" data-sizes="72px" alt="">
-      <img class="boot-ghost bg2" data-img="ghost-nightcap" data-want="128" data-sizes="60px" alt="">
-      <img class="boot-ghost bg3" data-img="ghost-teddy" data-want="128" data-sizes="54px" alt="">
+      <img class="boot-ghost bg1" fetchpriority="low" data-img="ghost-plain" data-want="128" data-sizes="72px" alt="">
+      <img class="boot-ghost bg2" fetchpriority="low" data-img="ghost-nightcap" data-want="128" data-sizes="60px" alt="">
+      <img class="boot-ghost bg3" fetchpriority="low" data-img="ghost-teddy" data-want="128" data-sizes="54px" alt="">
     </div>
     <div class="boot-inner">
       <div class="boot-win">
@@ -321,7 +323,7 @@
           <li>Voice of Pip: every line recorded by Anushka Bhalekar, lightly cleaned up with ChatGPT audio editing.</li>
           <li>Code libraries: <a href="https://gsap.com">GSAP</a>, <a href="https://lenis.darkroom.engineering">Lenis</a>, <a href="https://brm.io/matter-js/">Matter.js</a>.</li>
           <li>Fonts: Lilita One, Nunito and VT323 via Fontsource (SIL Open Font License).</li>
-          <li>Melodies: Brahms' Lullaby and Twinkle Twinkle Little Star (public domain), played on a synthesized music box.</li>
+          <li>Melodies: traditional nursery rhymes and lullabies (public domain), played on a synthesized music box.</li>
         </ul>
       </details>
     </footer>

@@ -1,8 +1,6 @@
-import '@fontsource/lilita-one/latin-400.css';
 import '@fontsource/nunito/latin-400.css';
 import '@fontsource/nunito/latin-700.css';
 import '@fontsource/nunito/latin-800.css';
-import '@fontsource/vt323/latin-400.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/os.css';
