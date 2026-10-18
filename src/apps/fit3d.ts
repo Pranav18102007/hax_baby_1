@@ -178,6 +178,13 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   const pip = new Group(); root.add(pip);      // hops and bobs
 
   const headSkin = vinyl('#ffffff', { vertexColors: true });
+  // the dark painted areas (eye sockets, nose, mouth) are matte: no gloss coat, no reflections, no highlights
+  headSkin.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <color_fragment>', '#include <color_fragment>\n  float socketDark = 1.0 - smoothstep(0.02, 0.2, vColor.r);')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, 1.0, socketDark);')
+      .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n  material.clearcoat *= 1.0 - socketDark;\n  material.specularColor *= 1.0 - socketDark;\n  material.specularF90 *= 1.0 - socketDark;');
+  };
   const handSkin = vinyl('#faf0e4');
   const suitMat = plush('#ffffff');
   const capMat = plush('#ffffff');
@@ -202,8 +209,8 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     g.add(new Mesh(geo(new SphereGeometry(0.072, 24, 16)), lightMat));
     const sparkle = new Mesh(geo(new SphereGeometry(0.026, 12, 10)), lightMat); // second tiny highlight = extra cute
     sparkle.position.set(-0.05, 0.06, 0.03); g.add(sparkle);
-    const halo = new Sprite(new SpriteMaterial({ map: glowTex, blending: AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 }));
-    disposables.push(halo.material); halo.scale.setScalar(0.26); g.add(halo);
+    const halo = new Sprite(new SpriteMaterial({ map: glowTex, blending: AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }));
+    disposables.push(halo.material); halo.scale.setScalar(0.17); g.add(halo);
     head.add(g); lights.push(g);
   }
 

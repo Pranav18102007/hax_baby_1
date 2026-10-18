@@ -83,11 +83,14 @@ def head_sdf(p):
     return ssub(d, smile, 0.012)
 
 def head_colors(v):
-    bone = np.array([250, 240, 228]); dark = np.array([46, 26, 38]); blush = np.array([242, 150, 178])
+    bone = np.array([250, 240, 228]); dark = np.array([28, 16, 24]); blush = np.array([242, 150, 178])
     col = np.tile(bone, (len(v), 1)).astype(float)
-    for c in SOCKETS:   # inside the socket bowls goes dark
-        q = (v - (c + (0, 0, 0.06))) / np.array([0.28, 0.31, 0.26])
-        w = np.clip((1.08 - length(q)) * 5, 0, 1)[:, None]
+    for s in (-1, 1):   # rosy blush (painted first so the sockets cover it cleanly)
+        w = np.clip(1 - length((v - (s * 0.55, 1.6, 0.62)) / (0.18, 0.12, 0.2)), 0, 1)[:, None] ** 1.3 * 0.85
+        col = col * (1 - w) + blush * w
+    for c in SOCKETS:   # the whole socket bowl is solid dark, with a short soft edge at the rim
+        q = (v - (c + (0, 0, 0.06))) / np.array([0.27, 0.3, 0.25])
+        w = np.clip((1.04 - length(q)) * 9, 0, 1)[:, None]
         col = col * (1 - w) + dark * w
     nose = np.clip((0.06 - length((v - (0, 1.69, 0.8)) / (1, 1.3, 1))) * 45, 0, 1)[:, None]
     col = col * (1 - nose) + dark * nose
@@ -95,9 +98,6 @@ def head_colors(v):
     sm = np.min([capsule(v, arc[i], arc[i + 1], 0.0) for i in range(len(arc) - 1)], axis=0)
     w = np.clip((0.036 - sm) * 50, 0, 1)[:, None]
     col = col * (1 - w) + dark * w
-    for s in (-1, 1):   # rosy blush
-        w = np.clip(1 - length((v - (s * 0.55, 1.63, 0.62)) / (0.19, 0.13, 0.22)), 0, 1)[:, None] ** 1.3 * 0.85
-        col = col * (1 - w) + blush * w
     return col
 
 def body_sdf(p):
