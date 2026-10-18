@@ -64,12 +64,13 @@ function start(): void {
     <div class="chaos-count" role="status">Nightmares squished: <b>0</b>/3</div>
     <div class="chaos-pip os-window"><header class="win-bar static"><h2 class="win-title">pip.exe is scared</h2></header><img src="${url('pip-worried', 512)}" alt="Pip looking worried"></div>
     ${Array.from({ length: isPhone() ? 1 : 3 }, (_, i) => `<div class="chaos-err os-window" style="--i:${i}"><header class="win-bar static"><h2 class="win-title">Error</h2></header><p>error: too many dreams (${i + 1})</p></div>`).join('')}
-    ${['blob-tongue', 'blob-storm', 'blob-grump'].map((b, i) => `<button type="button" class="blob" data-i="${i}" aria-label="Squish bad dream ${i + 1}"><img src="${url(b, 384)}" alt=""></button>`).join('')}`;
+    <button type="button" class="dream-bin" aria-label="The Bad Dream Bin. Drag a bad dream in to feed it."><img class="bin-shut" src="${url('bin-closed', 384)}" alt=""><img class="bin-open" src="${url('bin-open', 384)}" alt=""></button>
+    ${['blob-tongue', 'blob-storm', 'blob-grump'].map((b, i) => `<button type="button" class="blob" data-i="${i}" aria-label="Squish bad dream ${i + 1}"><img src="${url(b, 384)}" alt="" draggable="false"></button>`).join('')}`;
   document.body.appendChild(layer);
 
   // DVD-screensaver bounce, measured against the current viewport every frame
   const blobs = [...layer.querySelectorAll<HTMLButtonElement>('.blob')];
-  const st = blobs.map((_, i) => ({ x: 0.15 + i * 0.3, y: 0.25 + (i % 2) * 0.3, vx: (0.0011 + Math.random() * 0.0008) * (i % 2 ? -1 : 1), vy: 0.0013 + Math.random() * 0.0008, alive: true }));
+  const st = blobs.map((_, i) => ({ x: 0.15 + i * 0.3, y: 0.25 + (i % 2) * 0.3, vx: (0.0011 + Math.random() * 0.0008) * (i % 2 ? -1 : 1), vy: 0.0013 + Math.random() * 0.0008, alive: true, held: false, dragged: false }));
   let raf = 0, last = performance.now();
   const tick = (now: number) => {
     raf = requestAnimationFrame(tick);
@@ -77,7 +78,7 @@ function start(): void {
     blobs.forEach((b, i) => {
       const s = st[i];
       if (!s.alive) return;
-      if (!calm) {
+      if (!calm && !s.held) {
         s.x += s.vx * dt; s.y += s.vy * dt;
         const bw = b.offsetWidth / window.innerWidth, bh = b.offsetHeight / window.innerHeight;
         if (s.x < 0 || s.x > 1 - bw) { s.vx *= -1; s.x = Math.max(0, Math.min(1 - bw, s.x)); }
@@ -91,15 +92,63 @@ function start(): void {
 
   let squished = 0;
   const count = layer.querySelector<HTMLElement>('.chaos-count b')!;
-  blobs.forEach((b, i) => b.addEventListener('click', () => {
+  // the Bad Dream Bin: drag a blob into it and it eats it, then burps a star
+  const bin = layer.querySelector<HTMLButtonElement>('.dream-bin')!;
+  bin.addEventListener('click', () => { voice.bubble('Feed me bad dreams! (drag one in)', bin); audio.play('boing'); });
+  const overBin = (x: number, y: number) => { const r = bin.getBoundingClientRect(); return x > r.left - 20 && x < r.right + 20 && y > r.top - 20 && y < r.bottom + 20; };
+  blobs.forEach((b, i) => {
+    let sx = 0, sy = 0, ox = 0, oy = 0;
+    b.addEventListener('pointerdown', (e) => {
+      const s = st[i]; if (!s.alive) return;
+      s.held = true; s.dragged = false; sx = e.clientX; sy = e.clientY;
+      const r = b.getBoundingClientRect(); ox = e.clientX - r.left; oy = e.clientY - r.top;
+      b.setPointerCapture(e.pointerId);
+    });
+    b.addEventListener('pointermove', (e) => {
+      const s = st[i]; if (!s.held) return;
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) > 8) s.dragged = true;
+      if (!s.dragged) return;
+      s.x = (e.clientX - ox) / window.innerWidth; s.y = (e.clientY - oy) / window.innerHeight;
+      bin.classList.toggle('hungry', overBin(e.clientX, e.clientY));
+    });
+    b.addEventListener('pointerup', (e) => {
+      const s = st[i]; s.held = false;
+      bin.classList.remove('hungry');
+      if (s.dragged && overBin(e.clientX, e.clientY)) squish(i, true);
+    });
+    b.addEventListener('pointercancel', () => { st[i].held = false; bin.classList.remove('hungry'); });
+  });
+
+  blobs.forEach((b, i) => b.addEventListener('click', () => { if (!st[i].dragged) squish(i, false); }));
+  function squish(i: number, eaten: boolean): void {
+    const b = blobs[i];
     if (!st[i].alive) return;
     st[i].alive = false;
-    b.classList.add('squished');
+    b.classList.add(eaten ? 'eaten' : 'squished');
     audio.play('pop');
+    if (eaten) {
+      bin.classList.add('chomp');
+      audio.play('glug');
+      window.setTimeout(() => {
+        bin.classList.remove('chomp');
+        const r = bin.getBoundingClientRect();
+        burp(r.left + r.width / 2, r.top);
+        audio.play('sparkle');
+        voice.bubble('*burp* ✦ excuse me!', bin);
+      }, 650);
+    }
     squished++;
     count.textContent = String(squished);
     if (squished === 3) antivirus();
-  }));
+  }
+  function burp(x: number, y: number): void {
+    const star = document.createElement('span');
+    star.className = 'burp-star';
+    star.textContent = '★';
+    star.style.left = `${x}px`; star.style.top = `${y}px`;
+    layer.appendChild(star);
+    window.setTimeout(() => star.remove(), 1400);
+  }
 
   let avShown = false;
   const avTimer = window.setTimeout(() => antivirus(), 8000);

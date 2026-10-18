@@ -286,3 +286,19 @@
 .room-object img { transition: opacity 0.45s; }
 .room-object img.assembling { opacity: 0; }
 
+
+/* Download goodies: proudly bad 90s banner ads */
+.goodies { width: min(900px, 100%); margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.ad { display: grid; justify-items: center; gap: 2px; width: min(420px, 100%); padding: 10px 12px; text-decoration: none; text-align: center;
+  border: 3px outset #fff1c4; font-family: 'Comic Sans MS', 'Chalkboard SE', var(--font-display); color: #3b2a5c; box-shadow: 3px 3px 0 #3b2a5c; }
+.ad-wall { background: repeating-linear-gradient(45deg, #fff8d6 0 12px, #ffe7a0 12px 24px); }
+.ad-stick { background: repeating-linear-gradient(-45deg, #fde3ee 0 12px, #f6b5c8 12px 24px); }
+.ad-blink { font-family: var(--font-pixel); font-size: 22px; color: #d6336c; animation: hint 0.9s steps(2) infinite; }
+.ad-main { font-size: 20px; font-weight: 800; text-decoration: underline; color: #2b47c2; }
+.ad-small { font-size: 13px; }
+.ad:hover .ad-main, .ad:focus-visible .ad-main { color: #d6336c; }
+.ad-more { width: 100%; margin: 0; text-align: center; font-size: 14px; color: var(--cream); }
+.ad-more a { color: var(--gold); }
+.webring { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 4px 0 12px; font-family: var(--font-pixel); font-size: 20px; }
+.webring a { min-height: 44px; display: inline-flex; align-items: center; }
+.webring span { color: #c9b6e4; }

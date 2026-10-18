@@ -50,6 +50,7 @@ function mount(body: HTMLElement): () => void {
         <img src="${url('musicbox', 512)}" alt="Pip's music box" class="lab-box-img" draggable="false">
         <button type="button" class="lab-key" aria-label="Wind-up key: drag in circles to wind" data-tip="Drag me round and round!"></button>
         <div class="lab-notes" aria-hidden="true"></div>
+        <div class="lab-bubbles"></div>
       </div>
       <div class="lab-spring">
         <span>Spring</span>
@@ -59,6 +60,7 @@ function mount(body: HTMLElement): () => void {
         <button type="button" class="os-button" data-wind>Wind up</button>
         <button type="button" class="os-button" data-play aria-pressed="false">▶ Play</button>
         <button type="button" class="os-button" data-new>🎲 New lullaby</button>
+        <button type="button" class="os-button" data-keep>♥ Keep</button>
       </div>
     </div>
     <div class="lab-knobs">${Object.values(knobs).map(knobHTML).join('')}</div>
@@ -67,7 +69,8 @@ function mount(body: HTMLElement): () => void {
     </fieldset>
     <div class="lab-keys" role="group" aria-label="Star keys: play your own tune (keys 1 to 8)">
       ${Array.from({ length: 8 }, (_, i) => `<button type="button" class="star-key" data-deg="${i}" aria-label="Note ${i + 1}">★</button>`).join('')}
-    </div>`;
+    </div>
+    <section class="lab-saved" aria-label="Lullabies you kept"><h4>My lullabies</h4><ol></ol><p class="lab-saved-empty">Press ♥ Keep to save a lullaby you like.</p></section>`;
 
   const $ = <T extends HTMLElement>(s: string) => body.querySelector<T>(s)!;
   const meter = $('.lab-meter');
@@ -222,6 +225,7 @@ function mount(body: HTMLElement): () => void {
       if (k.id === 'dream') applyDream();
     };
     set(k.value);
+    el.addEventListener('setvalue', (e) => set((e as CustomEvent<number>).detail));
     let sy = 0, sv = 0;
     el.addEventListener('pointerdown', (e) => { el.setPointerCapture(e.pointerId); sy = e.clientY; sv = k.value; });
     el.addEventListener('pointermove', (e) => { if (el.hasPointerCapture(e.pointerId)) set(sv + ((sy - e.clientY) / 150) * (k.max - k.min)); });
@@ -256,7 +260,70 @@ function mount(body: HTMLElement): () => void {
   };
   document.addEventListener('keydown', onDigit);
 
+  // ---- ♥ Keep: saved lullabies (seed + scale + tempo), stored on this device ----
+  const SAVE_KEY = 'pip.lullabies';
+  const NAMES = ['Moonbeam Waltz', 'Sleepy Socks', 'Cloud Nine-ish', 'Ghost Hug', 'Star Crumbs', 'Warm Milk Song', 'Pillow Fort', 'Yawn in G', 'Nap Time Rag', 'Owl Lullaby', 'Teddy Tango', 'Night-Night Nocturne'];
+  type Saved = { seed: number; scale: ScaleId; tempo: number; name: string };
+  const readSaved = (): Saved[] => { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch { return []; } };
+  const writeSaved = (l: Saved[]) => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(l.slice(0, 12))); } catch { /* ignore */ } };
+  const savedList = body.querySelector<HTMLElement>('.lab-saved ol')!;
+  const savedEmpty = body.querySelector<HTMLElement>('.lab-saved-empty')!;
+  const renderSaved = () => {
+    const l = readSaved();
+    savedEmpty.hidden = l.length > 0;
+    savedList.innerHTML = l.map((x, i) => `<li><button type="button" class="os-button" data-load="${i}">▶ ${x.name}</button><button type="button" class="os-button lab-del" data-del="${i}" aria-label="Forget ${x.name}">✕</button></li>`).join('');
+  };
+  renderSaved();
+  $('[data-keep]').addEventListener('click', () => {
+    const l = readSaved();
+    if (l.some((x) => x.seed === seed && x.scale === scale)) { voice.bubble('Already kept that one! ♥', $('[data-keep]')); return; }
+    const name = NAMES[(seed + l.length) % NAMES.length];
+    l.unshift({ seed, scale, tempo: knobs.tempo.value, name });
+    writeSaved(l);
+    renderSaved();
+    audio.play('sparkle');
+    voice.say('V32', $('[data-keep]'), true);
+  });
+  savedList.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+    if (!b) return;
+    const l = readSaved();
+    if (b.dataset.load) {
+      const x = l[Number(b.dataset.load)];
+      if (!x) return;
+      seed = x.seed; scale = x.scale; melody = makeMelody(seed, scale); step = 0;
+      body.querySelector<HTMLInputElement>(`.lab-scales input[value="${scale}"]`)!.checked = true;
+      body.querySelector<HTMLElement>('.knob[data-knob="tempo"]')?.dispatchEvent(new CustomEvent('setvalue', { detail: x.tempo }));
+      if (playing) stop();
+      start(true);
+    } else if (b.dataset.del) {
+      l.splice(Number(b.dataset.del), 1);
+      writeSaved(l);
+      renderSaved();
+      audio.play('close');
+    }
+  });
+
+  // ---- bubble notes: pop a rising bubble to play a note ----
+  const bubbles = body.querySelector<HTMLElement>('.lab-bubbles')!;
+  const spawnBubble = () => {
+    if (reducedMotion() || bubbles.childElementCount > 5) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lab-bubble';
+    b.tabIndex = -1;
+    b.setAttribute('aria-hidden', 'true');
+    b.style.left = `${8 + Math.random() * 84}%`;
+    b.style.setProperty('--s', `${22 + Math.random() * 18}px`);
+    const deg = Math.floor(Math.random() * 8);
+    b.addEventListener('pointerdown', () => { if (audio.ctx && !store.get('sound.muted')) playDeg(deg); audio.play('pop'); floatNote(deg); b.remove(); });
+    b.addEventListener('animationend', () => b.remove());
+    bubbles.appendChild(b);
+  };
+  const bubbleTimer = window.setInterval(spawnBubble, 1700);
+
   return () => {
+    window.clearInterval(bubbleTimer);
     stop();
     offMute();
     document.removeEventListener('keydown', onDigit);

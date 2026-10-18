@@ -2,6 +2,7 @@ import type { Feature } from '../core/registry';
 import { store } from '../core/store';
 import { bus } from '../core/bus';
 import { isTouch } from '../core/a11y';
+import { availablePets } from '../features/pet';
 
 function radios(name: string, legend: string, options: [string, string][], value: string): string {
   return `<fieldset class="set-group"><legend>${legend}</legend>${options
@@ -32,7 +33,8 @@ const feature: Feature = {
           ${radios('display', 'Display', [['normal', 'Normal'], ['crt', 'CRT'], ['lcd', 'LCD'], ['onebit', '1-bit']], store.get('display.mode'))}
           ${radios('motion', 'Motion', [['system', 'Follow my device'], ['on', 'Reduce motion'], ['off', 'Full motion']], store.get('motion.reduced'))}
           ${isTouch() ? '' : toggle('cursor', 'Cursor sparkles', store.get('fx.cursor'))}
-          ${toggle('pet', 'Ghost kitten', store.get('pet.enabled'))}
+          ${toggle('pet', 'Desktop pet', store.get('pet.enabled'))}
+          ${availablePets().length > 1 ? radios('petkind', 'Which pet', availablePets().map((p) => [p.kind, p.label] as [string, string]), store.get('pet.kind')) : ''}
           <div class="set-forget">
             <button type="button" class="os-button" data-forget>Forget me</button>
             <p class="set-confirm" hidden>Forget your visits, secrets and settings?
@@ -50,6 +52,7 @@ const feature: Feature = {
           case 'motion': store.set('motion.reduced', t.value as any); break;
           case 'cursor': store.set('fx.cursor', t.checked); break;
           case 'pet': store.set('pet.enabled', t.checked); break;
+          case 'petkind': store.set('pet.kind', t.value as any); break;
           case 'theme':
             if (t.value === 'clock') {
               store.set('theme.userSet', false);

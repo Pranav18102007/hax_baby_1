@@ -16,6 +16,7 @@ export interface State {
   'motion.reduced': 'system' | 'on' | 'off';
   'fx.cursor': boolean;
   'pet.enabled': boolean;
+  'pet.kind': 'kitten' | 'bunny' | 'bat';
   'chaos.active': boolean;
   'section.current': string;
   'audio.unlocked': boolean;
@@ -26,7 +27,7 @@ type Key = keyof State;
 type Listener<K extends Key> = (value: State[K]) => void;
 
 const STORAGE_KEY = 'pip.v1';
-const SAVED: Key[] = ['sound.muted', 'sound.theme', 'theme.mode', 'theme.userSet', 'display.mode', 'motion.reduced', 'fx.cursor', 'pet.enabled', 'visitor'];
+const SAVED: Key[] = ['sound.muted', 'sound.theme', 'theme.mode', 'theme.userSet', 'display.mode', 'motion.reduced', 'fx.cursor', 'pet.enabled', 'pet.kind', 'visitor'];
 
 function istHour(): number {
   const h = new Date().getUTCHours() + 5.5 + new Date().getUTCMinutes() / 60;
@@ -42,6 +43,7 @@ const defaults: State = {
   'motion.reduced': 'system',
   'fx.cursor': true,
   'pet.enabled': true,
+  'pet.kind': 'kitten',
   'chaos.active': false,
   'section.current': 'hero',
   'audio.unlocked': false,
@@ -91,6 +93,7 @@ export const store = {
   },
   /** Clear everything saved ("Forget me"). */
   reset(): void {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    // the store, plus what the extras keep on this device (stickers, wish jar, kept lullabies)
+    try { [STORAGE_KEY, 'pip.stickers', 'pip.wishjar', 'pip.lullabies'].forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
   },
 };

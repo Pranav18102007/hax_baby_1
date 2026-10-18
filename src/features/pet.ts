@@ -3,6 +3,16 @@ import { store } from '../core/store';
 import { audio } from '../core/audio';
 import { voice } from '../core/voice';
 import { isTouch, reducedMotion } from '../core/a11y';
+import { bus } from '../core/bus';
+import { url } from '../core/assets';
+
+/** Pets with a processed 10-frame strip (same layout as the kitten). Bunny and bat appear once their art lands. */
+export const PETS: { kind: 'kitten' | 'bunny' | 'bat'; label: string; strip: string; line?: string }[] = [
+  { kind: 'kitten', label: 'Ghost kitten', strip: 'kitten-strip' },
+  { kind: 'bunny', label: 'Moon bunny', strip: 'bunny-strip', line: 'V27' },
+  { kind: 'bat', label: 'Sleepy bat', strip: 'bat-strip', line: 'V28' },
+];
+export const availablePets = () => PETS.filter((p) => p.kind === 'kitten' || url(p.strip));
 
 /**
  * The ghost kitten: a 90s desktop pet. Desktop: floats after the pointer, sits, naps when idle.
@@ -17,6 +27,7 @@ type Anim = keyof typeof ANIM;
 const feature: Feature = {
   id: 'pet',
   priority: 'should',
+  startMenu: availablePets().length > 1 ? [{ id: 'pet-next', label: 'Switch pet', icon: 'icon-monitor', group: 'main', order: 30, run: () => bus.emit('pet:next') }] : [],
   init() {
     const pet = document.createElement('button');
     pet.type = 'button';
@@ -45,6 +56,24 @@ const feature: Feature = {
     apply();
     store.on('pet.enabled', apply);
     store.on('chaos.active', apply);
+    const applyKind = () => {
+      const p = availablePets().find((x) => x.kind === store.get('pet.kind')) ?? PETS[0];
+      if (p.kind !== 'kitten') sprite.style.backgroundImage = `url('${url(p.strip)}')`; else sprite.style.removeProperty('background-image');
+      pet.setAttribute('aria-label', p.label);
+    };
+    applyKind();
+    store.on('pet.kind', (k) => {
+      applyKind();
+      const p = PETS.find((x) => x.kind === k);
+      if (p?.line) voice.say(p.line, pet, true); else voice.giggle(pet);
+      pet.classList.remove('hop'); void pet.offsetWidth; pet.classList.add('hop');
+    });
+    bus.on('pet:next', () => {
+      const list = availablePets();
+      const i = list.findIndex((x) => x.kind === store.get('pet.kind'));
+      store.set('pet.enabled', true);
+      store.set('pet.kind', list[(i + 1) % list.length].kind);
+    });
 
     const purr = () => {
       if (performance.now() < purrUntil) return;

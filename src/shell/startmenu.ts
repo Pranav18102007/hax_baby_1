@@ -4,6 +4,7 @@ import { isPhone, trapFocus } from '../core/a11y';
 import type { StartItem } from '../core/registry';
 import { scrollToEl } from '../core/scroll';
 import { voice } from '../core/voice';
+import { bus } from '../core/bus';
 
 /** Scene shortcuts are built in; everything else comes from features via the registry. */
 const SCENES: [string, string][] = [
@@ -46,6 +47,18 @@ export function initStartMenu(items: StartItem[]): void {
 
   function build(): void {
     list.replaceChildren();
+    // Ask Pip search box (answered by the Ask Pip app)
+    const f = document.createElement('form');
+    f.className = 'sm-ask';
+    f.innerHTML = '<label for="sm-ask-in" class="sr-only">Ask Pip</label><input id="sm-ask-in" placeholder="Ask Pip anything…" autocomplete="off" maxlength="120"><button type="submit" class="sm-ask-go" aria-label="Ask">✦</button>';
+    f.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = (f.querySelector('input') as HTMLInputElement).value.trim();
+      if (!q) return;
+      close();
+      bus.emit('askpip:ask', q);
+    });
+    list.append(f);
     list.append(heading('Go to'));
     for (const [id, label] of SCENES) {
       list.append(row(label, undefined, () => scrollToEl(`#${id}`), { cls: 'sm-scene' }));
@@ -94,6 +107,7 @@ export function initStartMenu(items: StartItem[]): void {
     if (!menu.hidden && !menu.contains(e.target as Node) && !btn.contains(e.target as Node)) close();
   });
   menu.addEventListener('keydown', (e) => {
+    if ((e.target as HTMLElement).matches('input') && e.key !== 'Escape' && e.key !== 'ArrowDown') return;
     const all = [...menu.querySelectorAll<HTMLElement>('.sm-item')];
     const i = all.indexOf(document.activeElement as HTMLElement);
     if (e.key === 'ArrowDown') { e.preventDefault(); all[(i + 1) % all.length]?.focus(); }
