@@ -21,7 +21,7 @@ export const EXTRAS = ['Nothing', 'Star wand', 'Teddy', 'Balloon', 'Dream orb'] 
 export interface Fit { hat: number; suit: number; extra: number }
 
 const PLUM = '#3b2a5c', PINK = '#f6b5c8', GOLD = '#f3d27a', CREAM = '#fff5e8';
-const HEAD_C = new Vector3(0, 1.86, 0);
+const HEAD_C = new Vector3(0, 1.9, 0);
 
 /** Little repeating pattern textures for the onesies and caps, drawn on a canvas. */
 function pattern(bg: string, fg: string, kind: 'hearts' | 'stars' | 'stripes' | 'dots', rx = 4, ry = 3): CanvasTexture {
@@ -120,7 +120,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
 
   const camera = new PerspectiveCamera(32, 1, 0.1, 50);
   camera.position.set(0, 1.75, 7.6);
-  camera.lookAt(0, 1.42, 0);
+  camera.lookAt(0, 1.47, 0);
 
   scene.add(new HemisphereLight('#e6d8ff', PLUM, 0.35));
   const key = new DirectionalLight('#fff0dc', 2.1);
@@ -178,7 +178,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   const pip = new Group(); root.add(pip);      // hops and bobs
 
   const headSkin = vinyl('#ffffff', { vertexColors: true });
-  const handSkin = vinyl('#f6ecdc');
+  const handSkin = vinyl('#faf0e4');
   const suitMat = plush('#ffffff');
   const capMat = plush('#ffffff');
   const cloud = part('cloud'); cloud.material = plush(CREAM, { sheenColor: new Color('#e9ddff'), roughness: 0.95 }); root.add(cloud);
@@ -198,17 +198,33 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   const glowTex = glowTexture(); disposables.push(glowTex);
   const lights: Group[] = [];
   for (const s of [-1, 1]) {
-    const g = new Group(); g.position.set(s * 0.29, -0.01, 0.6);
-    g.add(new Mesh(geo(new SphereGeometry(0.058, 20, 14)), lightMat));
+    const g = new Group(); g.position.set(s * 0.32, -0.08, 0.64);
+    g.add(new Mesh(geo(new SphereGeometry(0.072, 24, 16)), lightMat));
+    const sparkle = new Mesh(geo(new SphereGeometry(0.026, 12, 10)), lightMat); // second tiny highlight = extra cute
+    sparkle.position.set(-0.05, 0.06, 0.03); g.add(sparkle);
     const halo = new Sprite(new SpriteMaterial({ map: glowTex, blending: AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 }));
-    disposables.push(halo.material); halo.scale.setScalar(0.22); g.add(halo);
+    disposables.push(halo.material); halo.scale.setScalar(0.26); g.add(halo);
     head.add(g); lights.push(g);
   }
+
+  // little hearts that float up when you poke Pip
+  const heartTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d')!;
+    g.fillStyle = '#ff9ec4'; g.beginPath(); g.moveTo(32, 54); g.bezierCurveTo(-4, 30, 14, 2, 32, 20); g.bezierCurveTo(50, 2, 68, 30, 32, 54); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.7)'; g.beginPath(); g.ellipse(22, 22, 6, 4, -0.6, 0, Math.PI * 2); g.fill();
+    const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; return t;
+  })();
+  disposables.push(heartTex);
+  const hearts: Sprite[] = Array.from({ length: 6 }, () => {
+    const h = new Sprite(new SpriteMaterial({ map: heartTex, transparent: true, depthWrite: false }));
+    disposables.push(h.material); h.scale.setScalar(0.26); h.visible = false; h.userData = { age: 9, x0: 0, y0: 0, ph: 0 };
+    root.add(h); return h;
+  });
 
   // arms: shoulder-local meshes on pivots so they can pose and wave
   const arms: Group[] = [];
   for (const s of [-1, 1]) {
-    const shoulder = new Group(); shoulder.position.set(s * 0.5, 1.12, 0.05);
+    const shoulder = new Group(); shoulder.position.set(s * 0.47, 1.06, 0.05);
     const sleeve = new Mesh(part('arm').geometry, suitMat); sleeve.castShadow = true;
     const hand = new Mesh(part('hand').geometry, handSkin); hand.castShadow = true;
     if (s < 0) { sleeve.scale.x = -1; hand.scale.x = -1; }
@@ -231,7 +247,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     const tex = new CanvasTexture(c); tex.colorSpace = SRGBColorSpace; tex.wrapS = RepeatWrapping; tex.repeat.set(3, 1); disposables.push(tex);
     partyHat.add(prim(geo(new ConeGeometry(0.34, 0.9, 40, 1, true)), vinyl('#ffffff', { map: tex, roughness: 0.5 }), 0, 0.5, 0));
     partyHat.add(prim(geo(new SphereGeometry(0.11, 20, 14)), plush(GOLD, { roughness: 1 }), 0, 0.98, 0));
-    partyHat.position.set(0.18, 0.5, 0); partyHat.rotation.z = -0.25;
+    partyHat.position.set(0.2, 0.6, 0); partyHat.rotation.z = -0.25; partyHat.scale.setScalar(1.1);
   }
   const crown = new Group();
   {
@@ -240,7 +256,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     const spike = geo(new ConeGeometry(0.07, 0.2, 12)), gemG = geo(new SphereGeometry(0.04, 16, 12));
     const gem = vinyl(PINK, { roughness: 0.1, clearcoat: 1, transmission: 0.3 });
     for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; crown.add(prim(spike, gold, Math.sin(a) * 0.36, 0.18, Math.cos(a) * 0.36)); crown.add(prim(gemG, gem, Math.sin(a) * 0.375, 0, Math.cos(a) * 0.375)); }
-    crown.position.set(0, 0.62, 0); crown.rotation.z = -0.12;
+    crown.position.set(0, 0.72, 0); crown.rotation.z = -0.12; crown.scale.setScalar(1.12);
   }
   head.add(partyHat, crown);
 
@@ -252,7 +268,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     g.add(prim(geo(new CylinderGeometry(0.025, 0.025, 0.75, 12)), vinyl(CREAM), 0, 0.28, 0));
     const st = prim(geo(new ExtrudeGeometry(starShape(0.22), { depth: 0.05, bevelEnabled: true, bevelSize: 0.025, bevelThickness: 0.025, bevelSegments: 3 })), vinyl(GOLD, { metalness: 0.8, roughness: 0.3, emissive: new Color('#6b5214'), emissiveIntensity: 0.5 }), 0, 0.72, -0.025);
     g.add(st); g.userData.spin = st;
-    g.position.set(0, -0.48, 0.12); g.rotation.set(0.25, 0, -1.35);
+    g.position.set(0, -0.4, 0.12); g.rotation.set(0.25, 0, -1.35);
     armR.add(g); extras.push(g);
   }
   { // teddy, hugged in the left arm
@@ -266,13 +282,13 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   }
   { // balloon above the raised left hand
     const g = new Group(); const bm = vinyl(PINK, { roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1 });
-    const b = prim(ball, bm, 0.15, 1.15, 0, 0.3, 0.36, 0.3); g.add(b);
-    const knot = prim(geo(new ConeGeometry(0.04, 0.06, 10)), bm, 0.15, 0.78, 0); knot.rotation.x = Math.PI; g.add(knot);
-    const curve = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(0.08, 0.3, 0.02), new Vector3(0.02, 0.55, -0.02), new Vector3(0.15, 0.78, 0)]);
+    const b = prim(ball, bm, -0.45, 1.2, 0, 0.3, 0.36, 0.3); g.add(b);
+    const knot = prim(geo(new ConeGeometry(0.04, 0.06, 10)), bm, -0.45, 0.83, 0); knot.rotation.x = Math.PI; g.add(knot);
+    const curve = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(-0.08, 0.3, 0.02), new Vector3(-0.3, 0.55, -0.02), new Vector3(-0.45, 0.83, 0)]);
     const str = new Line(geo(new BufferGeometry().setFromPoints(curve.getPoints(24))), new LineBasicMaterial({ color: CREAM }));
     disposables.push(str.material as Material);
     g.add(str); g.userData.float = b;
-    g.position.set(-0.95, 0.95, 0.18); pip.add(g); extras.push(g);
+    g.position.set(-0.84, 0.92, 0.18); pip.add(g); extras.push(g);
   }
   { // dream orb floating beside Pip
     const g = new Group();
@@ -330,11 +346,23 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     root.rotation.x = pitch;
     const bob = opts.still ? 0 : Math.sin(t * 2) * 0.03;
     hop = Math.max(0, hop - dt * 2.4);
-    pip.position.y = bob + Math.sin(hop * Math.PI) * 0.35;
+    const jump = Math.sin(hop * Math.PI);
+    pip.position.y = bob + jump * 0.35;
+    // squash before the hop, stretch in the air, and soft breathing the rest of the time
+    const breathe = opts.still ? 0 : Math.sin(t * 2) * 0.012;
+    pip.scale.set(1 - jump * 0.06 - breathe, 1 + jump * 0.1 + breathe, 1 - jump * 0.06 - breathe);
     head.rotation.y += ((lookX * 0.35) - head.rotation.y) * 0.08;
     head.rotation.x += ((-lookY * 0.2) - head.rotation.x) * 0.08;
+    head.rotation.z = 0.1 + (opts.still ? 0 : Math.sin(t * 1.3) * 0.05);   // a little curious head tilt
+    hearts.forEach((h) => {
+      h.userData.age += dt;
+      const a = h.userData.age;
+      h.position.y = h.userData.y0 + a * 0.7; h.position.x = h.userData.x0 + Math.sin(a * 5 + h.userData.ph) * 0.08;
+      (h.material as SpriteMaterial).opacity = Math.max(0, 1 - a / 1.6);
+      h.visible = a >= 0 && a < 1.6;
+    });
     eyeX += (lookX - eyeX) * 0.15; eyeY += (lookY - eyeY) * 0.15;
-    lights.forEach((l, i) => { l.position.x = (i ? 0.29 : -0.29) + eyeX * 0.06; l.position.y = -0.01 + eyeY * 0.06; });
+    lights.forEach((l, i) => { l.position.x = (i ? 0.32 : -0.32) + eyeX * 0.06; l.position.y = -0.08 + eyeY * 0.06; });
     blinkAt -= dt;
     const blink = blinkAt < 0 && blinkAt > -0.14 ? 0.12 : 1;
     if (blinkAt < -0.14) blinkAt = 2 + Math.random() * 3;
@@ -342,7 +370,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     if (wave > 0) { wave = Math.max(0, wave - dt); armR.rotation.z = 2.4 + Math.sin(t * 14) * 0.35; armR.rotation.x = -0.2; if (wave === 0) setFit(fit); }
     const ex = extras[fit.extra];
     if (ex.userData.spin) (ex.userData.spin as Object3D).rotation.y = t * 2;
-    if (ex.userData.float) (ex.userData.float as Object3D).position.x = 0.15 + Math.sin(t * 1.4) * 0.05;
+    if (ex.userData.float) (ex.userData.float as Object3D).position.x = -0.45 + Math.sin(t * 1.4) * 0.05;
     if (ex.userData.orbit && !opts.still) { ex.position.set(Math.cos(t * 0.9) * 0.95, 1.7 + Math.sin(t * 1.8) * 0.12, Math.sin(t * 0.9) * 0.6); ex.rotation.y = t; }
     renderer.render(scene, camera);
   };
@@ -351,7 +379,10 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     setFit,
     look(x, y) { lookX = Math.max(-1, Math.min(1, x)); lookY = Math.max(-1, Math.min(1, y)); },
     spinBy(dx, dy = 0) { vel = dx; pitch = Math.max(-0.35, Math.min(0.25, pitch + dy)); auto = false; },
-    poke() { hop = 1; wave = 1.2; },
+    poke() {
+      hop = 1; wave = 1.2;
+      hearts.forEach((h, i) => { h.userData.age = -i * 0.12; h.userData.x0 = (Math.random() - 0.5) * 1.2; h.userData.y0 = 2.5 + Math.random() * 0.2; h.userData.ph = Math.random() * 6; h.position.set(h.userData.x0, h.userData.y0, 0.6); h.visible = false; });
+    },
     hit(x, y) { ray.setFromCamera(new Vector2(x, y), camera); return ray.intersectObject(pip, true).length > 0; },
     setAuto(on) { auto = on; },
     resize,

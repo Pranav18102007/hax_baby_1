@@ -63,85 +63,89 @@ def bezier(pts, t):
     return pts[0]
 
 # ---------- parts (world coords, y up, +z towards the viewer) ----------
-HEAD_C = np.array([0.0, 1.86, 0.0])
-SOCKETS = [np.array([s * 0.29, 1.85, 0.6]) for s in (-1, 1)]
+# chibi proportions: a big round head on a small, round body with short limbs and big booties
+HEAD_C = np.array([0.0, 1.9, 0.0])
+SOCKETS = [np.array([s * 0.32, 1.82, 0.68]) for s in (-1, 1)]   # big eyes, set low and wide (cuter)
+
+def smile_arc():
+    return [(np.sin(a) * 0.078, 1.612 - np.cos(a) * 0.045, 0.805 - abs(np.sin(a)) * 0.022) for a in np.linspace(-1.3, 1.3, 9)]
 
 def head_sdf(p):
-    d = ellipsoid(p, HEAD_C, (0.78, 0.71, 0.74))
-    d = smin(d, ellipsoid(p, (0, 1.66, 0.1), (0.64, 0.5, 0.62)), 0.18)   # chubby cheeks / jaw
+    d = ellipsoid(p, HEAD_C, (0.88, 0.8, 0.82))
+    d = smin(d, ellipsoid(p, (0, 1.68, 0.1), (0.72, 0.56, 0.7)), 0.2)     # chubby lower face
     for s in (-1, 1):
-        d = smin(d, ellipsoid(p, (s * 0.41, 1.62, 0.34), (0.31, 0.27, 0.31)), 0.24)  # soft, rounded cheek puffs (wide blend = no ridge)
+        d = smin(d, ellipsoid(p, (s * 0.46, 1.64, 0.38), (0.34, 0.29, 0.34)), 0.26)  # soft round cheek puffs
     for c in SOCKETS:
-        d = ssub(d, ellipsoid(p, c + (0, 0, 0.06), (0.205, 0.245, 0.2)), 0.05)  # big hollow eye sockets
-    d = ssub(d, ellipsoid(p, (0, 1.665, 0.735), (0.05, 0.035, 0.06)), 0.02)       # little nose
-    arc = [(np.sin(a) * 0.1, 1.585 - np.cos(a) * 0.055, 0.74 - abs(np.sin(a)) * 0.03) for a in np.linspace(-1.25, 1.25, 9)]
+        d = ssub(d, ellipsoid(p, c + (0, 0, 0.06), (0.25, 0.28, 0.22)), 0.06)  # big round hollow eye sockets
+    d = ssub(d, ellipsoid(p, (0, 1.69, 0.815), (0.04, 0.03, 0.05)), 0.018)     # tiny button nose
+    arc = smile_arc()
     smile = np.min([capsule(p, arc[i], arc[i + 1], 0.021) for i in range(len(arc) - 1)], axis=0)
-    return ssub(d, smile, 0.015)
+    return ssub(d, smile, 0.012)
 
 def head_colors(v):
-    bone = np.array([246, 236, 220]); dark = np.array([52, 30, 42]); blush = np.array([246, 170, 190])
+    bone = np.array([250, 240, 228]); dark = np.array([46, 26, 38]); blush = np.array([242, 150, 178])
     col = np.tile(bone, (len(v), 1)).astype(float)
     for c in SOCKETS:   # inside the socket bowls goes dark
-        q = (v - (c + (0, 0, 0.06))) / np.array([0.23, 0.27, 0.24])
+        q = (v - (c + (0, 0, 0.06))) / np.array([0.28, 0.31, 0.26])
         w = np.clip((1.08 - length(q)) * 5, 0, 1)[:, None]
         col = col * (1 - w) + dark * w
-    nose = np.clip((0.07 - length((v - (0, 1.665, 0.72)) / (1, 1.3, 1))) * 40, 0, 1)[:, None]
+    nose = np.clip((0.06 - length((v - (0, 1.69, 0.8)) / (1, 1.3, 1))) * 45, 0, 1)[:, None]
     col = col * (1 - nose) + dark * nose
-    arc = [(np.sin(a) * 0.1, 1.585 - np.cos(a) * 0.055, 0.74 - abs(np.sin(a)) * 0.03) for a in np.linspace(-1.25, 1.25, 9)]
+    arc = smile_arc()
     sm = np.min([capsule(v, arc[i], arc[i + 1], 0.0) for i in range(len(arc) - 1)], axis=0)
-    w = np.clip((0.035 - sm) * 45, 0, 1)[:, None]
+    w = np.clip((0.036 - sm) * 50, 0, 1)[:, None]
     col = col * (1 - w) + dark * w
-    for s in (-1, 1):   # soft blush
-        w = np.clip(1 - length((v - (s * 0.5, 1.6, 0.6)) / (0.19, 0.13, 0.22)), 0, 1)[:, None] ** 1.5 * 0.8
+    for s in (-1, 1):   # rosy blush
+        w = np.clip(1 - length((v - (s * 0.55, 1.63, 0.62)) / (0.19, 0.13, 0.22)), 0, 1)[:, None] ** 1.3 * 0.85
         col = col * (1 - w) + blush * w
     return col
 
 def body_sdf(p):
-    d = ellipsoid(p, (0, 0.95, 0), (0.58, 0.62, 0.5))
-    d = smin(d, ellipsoid(p, (0, 0.84, 0.12), (0.5, 0.46, 0.44)), 0.15)       # round baby tummy
-    d = smin(d, capsule(p, (0, 1.2, 0), (0, 1.36, 0), 0.24), 0.1)              # neck
-    d = smin(d, torus_xz(p, (0, 1.3, 0), 0.25, 0.05), 0.04)                   # collar
-    for s in (-1, 1):                                                          # sitting legs
-        d = smin(d, round_cone(p, (s * 0.24, 0.66, 0.08), (s * 0.28, 0.56, 0.6), 0.2, 0.15), 0.12)
+    d = ellipsoid(p, (0, 0.9, 0), (0.52, 0.54, 0.46))
+    d = smin(d, ellipsoid(p, (0, 0.82, 0.12), (0.46, 0.42, 0.42)), 0.15)      # round baby tummy
+    d = smin(d, capsule(p, (0, 1.15, 0), (0, 1.3, 0), 0.22), 0.1)              # neck
+    d = smin(d, torus_xz(p, (0, 1.26, 0), 0.23, 0.05), 0.04)                  # collar
+    for s in (-1, 1):                                                          # short sitting legs
+        d = smin(d, round_cone(p, (s * 0.22, 0.62, 0.08), (s * 0.26, 0.52, 0.5), 0.19, 0.15), 0.12)
     d = d + noise3(p, 9, 0.004)                                                # soft fabric wobble
-    for i, y in enumerate((1.12, 0.98, 0.84)):                                 # little buttons
-        d = smin(d, sphere(p, (0, y, 0.5 - i * 0.012), 0.028), 0.02)
+    for i, y in enumerate((1.06, 0.94, 0.82)):                                 # little buttons
+        d = smin(d, sphere(p, (0, y, 0.47 - i * 0.012), 0.026), 0.02)
     return d
 
-def foot_sdf(s):
-    return lambda p: smin(ellipsoid(p, (s * 0.29, 0.55, 0.72), (0.17, 0.15, 0.2)), sphere(p, (s * 0.29, 0.6, 0.64), 0.12), 0.08)
+def foot_sdf(s):  # big round booties
+    return lambda p: smin(ellipsoid(p, (s * 0.27, 0.52, 0.64), (0.19, 0.16, 0.22)), sphere(p, (s * 0.27, 0.57, 0.55), 0.13), 0.08)
 
-# arms built in shoulder-local coords (shoulder at origin, hanging down)
+# arms built in shoulder-local coords (shoulder at origin, hanging down): short and stubby
 def arm_sdf(p):
-    d = round_cone(p, (0, 0, 0), (0, -0.34, 0.05), 0.16, 0.13)
-    return smin(d, torus_xz(p - np.array([0, 0, 0]), (0, -0.36, 0.05), 0.11, 0.04), 0.03)  # cuff
+    d = round_cone(p, (0, 0, 0), (0, -0.26, 0.04), 0.15, 0.125)
+    return smin(d, torus_xz(p, (0, -0.28, 0.04), 0.105, 0.038), 0.03)         # cuff
 
 def hand_sdf(p):
-    d = ellipsoid(p, (0, -0.5, 0.07), (0.13, 0.14, 0.12))
-    return smin(d, ellipsoid(p, (0.08, -0.45, 0.13), (0.05, 0.06, 0.05)), 0.04)          # mitten thumb
+    d = ellipsoid(p, (0, -0.4, 0.06), (0.13, 0.135, 0.12))
+    return smin(d, ellipsoid(p, (0.08, -0.36, 0.12), (0.05, 0.055, 0.05)), 0.04)        # mitten thumb
 
 # nightcap in head-local coords (origin = head centre)
-CAP_PATH = [(0, 0.3, 0), (0.02, 0.95, -0.02), (0.55, 1.15, -0.08), (0.95, 0.62, -0.06)]
+CAP_PATH = [(0, 0.38, 0), (0.02, 1.08, -0.02), (0.62, 1.3, -0.08), (1.05, 0.72, -0.06)]
 def cap_sdf(p):
     ts = np.linspace(0, 1, 28)
     pts = [bezier(CAP_PATH, t) for t in ts]
-    rad = 0.64 * (1 - ts) ** 1.15 + 0.1
+    rad = 0.72 * (1 - ts) ** 1.15 + 0.11
     d = np.min([round_cone(p, pts[i], pts[i + 1], rad[i], rad[i + 1]) for i in range(len(ts) - 1)], axis=0)
     d = d + 0.012 * np.sin(np.arctan2(p[:, 0], p[:, 2]) * 7 + p[:, 1] * 6)    # soft cloth folds
-    d = np.maximum(d, -(p[:, 1] - 0.26))                                        # open at the bottom
-    d = smin(d, torus_xz(p, (0, 0.3, 0), 0.66, 0.13), 0.06)                     # rolled brim
+    d = np.maximum(d, -(p[:, 1] - 0.34))                                        # open at the bottom
+    d = smin(d, torus_xz(p, (0, 0.38, 0), 0.76, 0.145), 0.06)                   # rolled brim
     return d
 
 def pompom_sdf(p):
     c = bezier(CAP_PATH, 1.0) + np.array([0.05, -0.1, 0])
-    return sphere(p, c, 0.17) + noise3(p, 40, 0.012)
+    return sphere(p, c, 0.2) + noise3(p, 40, 0.013)
 
 def bow_sdf(p):
-    c = np.array([-0.45, 0.44, 0.5])
-    d = sphere(p, c, 0.07)
+    c = np.array([-0.5, 0.48, 0.62])
+    d = sphere(p, c, 0.075)
     for s in (-1, 1):
-        d = smin(d, ellipsoid(p, c + (s * 0.15, 0.015, -0.01), (0.155, 0.11, 0.06)), 0.04)
-        d = smin(d, capsule(p, c, c + (s * 0.09, -0.17, 0), 0.03), 0.02)
+        d = smin(d, ellipsoid(p, c + (s * 0.165, 0.015, -0.01), (0.17, 0.12, 0.065)), 0.04)
+        d = smin(d, capsule(p, c, c + (s * 0.1, -0.19, 0), 0.032), 0.02)
     return d
 
 def cloud_sdf(p):
@@ -183,16 +187,16 @@ def main():
         print(name, end='')
         scene.add_geometry(m, node_name=name, geom_name=name)
     hc = HEAD_C
-    add('head', mesh(head_sdf, hc - 0.95, hc + 0.95, 0.011, 16000, head_colors))
-    add('body', mesh(body_sdf, (-0.75, 0.3, -0.6), (0.75, 1.45, 0.85), 0.012, 9000))
+    add('head', mesh(head_sdf, hc - 1.0, hc + 1.0, 0.011, 18000, head_colors))
+    add('body', mesh(body_sdf, (-0.7, 0.25, -0.6), (0.7, 1.42, 0.8), 0.012, 8000))
     for s, n in ((-1, 'l'), (1, 'r')):
-        print(f'foot_{n}', end=''); scene.add_geometry(mesh(foot_sdf(s), (s * 0.29 - 0.25, 0.3, 0.4), (s * 0.29 + 0.25, 0.85, 1.0), 0.01, 1500), node_name=f'foot_{n}', geom_name=f'foot_{n}')
-    add('arm', mesh(arm_sdf, (-0.25, -0.5, -0.25), (0.25, 0.2, 0.3), 0.01, 2500))
-    add('hand', mesh(hand_sdf, (-0.2, -0.7, -0.15), (0.2, -0.3, 0.25), 0.008, 1500))
+        print(f'foot_{n}', end=''); scene.add_geometry(mesh(foot_sdf(s), (s * 0.27 - 0.28, 0.28, 0.3), (s * 0.27 + 0.28, 0.85, 0.95), 0.01, 1500), node_name=f'foot_{n}', geom_name=f'foot_{n}')
+    add('arm', mesh(arm_sdf, (-0.25, -0.42, -0.25), (0.25, 0.2, 0.3), 0.01, 2000))
+    add('hand', mesh(hand_sdf, (-0.2, -0.6, -0.15), (0.2, -0.2, 0.25), 0.008, 1500))
     cap = lambda p: cap_sdf(p - hc)
-    add('cap', mesh(cap, hc + (-0.95, 0.1, -0.9), hc + (1.25, 1.4, 0.9), 0.012, 9000))
-    add('pompom', mesh(lambda p: pompom_sdf(p - hc), hc + (0.7, 0.2, -0.35), hc + (1.3, 0.85, 0.25), 0.008, 2500))
-    add('bow', mesh(lambda p: bow_sdf(p - hc), hc + (-0.8, 0.1, 0.3), hc + (-0.05, 0.7, 0.75), 0.007, 2500))
+    add('cap', mesh(cap, hc + (-1.0, 0.15, -1.0), hc + (1.4, 1.55, 1.0), 0.012, 9000))
+    add('pompom', mesh(lambda p: pompom_sdf(p - hc), hc + (0.75, 0.25, -0.4), hc + (1.45, 0.95, 0.3), 0.008, 2500))
+    add('bow', mesh(lambda p: bow_sdf(p - hc), hc + (-0.9, 0.15, 0.3), hc + (-0.1, 0.8, 0.9), 0.007, 2500))
     add('cloud', mesh(cloud_sdf, (-1.6, -0.6, -1.0), (1.6, 0.85, 1.0), 0.016, 9000))
     RAW.parent.mkdir(parents=True, exist_ok=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
