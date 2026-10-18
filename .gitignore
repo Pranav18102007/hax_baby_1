@@ -5,3 +5,4 @@ assets-raw/
 .vercel/
 test-results/
 *.log
+scripts/tmp

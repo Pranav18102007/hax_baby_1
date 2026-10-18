@@ -96,14 +96,14 @@ const feature: Feature = {
       } else {
         const dx = tx - x, dy = ty - y;
         const d = Math.hypot(dx, dy);
-        if (d > 40) { x += dx * 0.045; y += dy * 0.045; if (Math.abs(dx) > 2) facing = dx > 0 ? 1 : -1; }
+        if (d > 60) { x += dx * 0.016; y += dy * 0.016; if (Math.abs(dx) > 2) facing = dx > 0 ? 1 : -1; }
         x = Math.max(4, Math.min(window.innerWidth - SIZE - 4, x));
         y = Math.max(4, Math.min(window.innerHeight - taskbarH() - SIZE, y));
       }
-      const moving = !still && Math.hypot(tx - x, ty - y) > 44;
+      const moving = !still && Math.hypot(tx - x, ty - y) > 64;
       const next: Anim = now < purrUntil ? 'purr' : moving ? 'float' : now - lastMove > 10000 ? 'sleep' : 'idle';
       if (next !== anim) { anim = next; frameI = 0; }
-      if (++tick % (anim === 'float' ? 8 : 22) === 0) frameI++;
+      if (++tick % (anim === 'float' ? 13 : 26) === 0) frameI++;
       const fr = ANIM[anim];
       setFrame(fr[frameI % fr.length]);
       pet.style.transform = `translate(${x}px, ${y}px)`;

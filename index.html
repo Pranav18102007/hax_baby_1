@@ -13,11 +13,28 @@
 
   <!-- S0 · Boot and wake -->
   <div id="boot" role="dialog" aria-modal="true" aria-labelledby="boot-title">
+    <div class="boot-sky" aria-hidden="true">
+      <span class="boot-moon"></span>
+      <img class="boot-ghost bg1" data-img="ghost-plain" data-want="128" data-sizes="72px" alt="">
+      <img class="boot-ghost bg2" data-img="ghost-nightcap" data-want="128" data-sizes="60px" alt="">
+      <img class="boot-ghost bg3" data-img="ghost-teddy" data-want="128" data-sizes="54px" alt="">
+    </div>
     <div class="boot-inner">
-      <img class="boot-logo" data-img="pip-pixel" data-want="256" data-sizes="96px" alt="" loading="eager">
-      <h1 id="boot-title" class="boot-title">DreamOS 93</h1>
-      <pre class="boot-lines" aria-hidden="true"></pre>
-      <div class="boot-bar" role="progressbar" aria-label="Loading dreams" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+      <div class="boot-win">
+        <div class="boot-winbar" aria-hidden="true"><span>DreamOS 93 · starting up</span><i>–</i><i>□</i><i>×</i></div>
+        <div class="boot-winbody">
+          <div class="boot-head">
+            <img class="boot-logo" data-img="pip-pixel" data-want="256" data-sizes="72px" alt="" loading="eager">
+            <div>
+              <h1 id="boot-title" class="boot-title">DreamOS 93</h1>
+              <p class="boot-sub">Pip BIOS v0.93 · 640K of dreams</p>
+            </div>
+          </div>
+          <pre class="boot-lines" aria-hidden="true"></pre>
+          <div class="boot-bar" role="progressbar" aria-label="Loading dreams" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+          <p class="boot-tip" aria-hidden="true"></p>
+        </div>
+      </div>
       <div class="boot-wake">
         <img class="boot-pip" data-img="pip-asleep" data-want="512" data-sizes="(max-width: 600px) 60vw, 280px" alt="Pip, fast asleep on a little cloud" loading="eager">
         <button class="wake-btn" id="wake-btn" type="button">☾ Tap to wake Pip</button>

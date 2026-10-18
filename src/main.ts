@@ -62,6 +62,7 @@ async function start(): Promise<void> {
   const ctx: Ctx = { store, bus, audio, voice, api, windows };
   windows.ctx = ctx;
   bus.on('app:open', (id: string) => void windows.openApp(id));
+  bus.on('app:close', (id: string) => windows.close(id));
 
   // features load while the boot screen runs
   const ready = loadFeatures(features, ctx);

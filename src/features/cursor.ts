@@ -11,17 +11,17 @@ import { isTouch, reducedMotion } from '../core/a11y';
 interface Preset { glyphs: string[]; colors: string[]; size: [number, number]; gravity: number; life: number }
 
 const PRESETS: Record<string, Preset> = {
-  hero: { glyphs: ['✦', '★', '·'], colors: ['#f3d27a', '#f6b5c8', '#fff5e8'], size: [10, 18], gravity: 0.02, life: 900 },
-  about: { glyphs: ['♥'], colors: ['#f6b5c8', '#ff9fbd'], size: [10, 16], gravity: -0.02, life: 900 },
-  story: { glyphs: ['•', '·'], colors: ['#ffd98a', '#fff1c4'], size: [5, 10], gravity: -0.01, life: 1200 },
-  dome: { glyphs: ['✦', '✧'], colors: ['#f3d27a', '#c9b6e4'], size: [10, 16], gravity: 0, life: 900 },
-  lab: { glyphs: ['♪', '♫'], colors: ['#f3d27a', '#f6b5c8', '#c9b6e4'], size: [14, 20], gravity: -0.03, life: 1000 },
+  hero: { glyphs: ['✦', '★', '✧'], colors: ['#f3d27a', '#f6b5c8', '#fff5e8'], size: [14, 26], gravity: 0.02, life: 1300 },
+  about: { glyphs: ['♥', '♡'], colors: ['#f6b5c8', '#ff9fbd', '#fff5e8'], size: [14, 24], gravity: -0.025, life: 1300 },
+  story: { glyphs: ['✦', '•', '✧'], colors: ['#ffd98a', '#fff1c4', '#f3d27a'], size: [10, 18], gravity: -0.015, life: 1600 },
+  dome: { glyphs: ['✦', '✧'], colors: ['#f3d27a', '#c9b6e4'], size: [14, 24], gravity: 0, life: 1300 },
+  lab: { glyphs: ['♪', '♫', '♬'], colors: ['#f3d27a', '#f6b5c8', '#c9b6e4'], size: [18, 28], gravity: -0.035, life: 1400 },
   nightlights: { glyphs: ['·'], colors: ['#ffd98a'], size: [6, 9], gravity: -0.01, life: 700 },
-  toys: { glyphs: ['★', '●'], colors: ['#f3d27a', '#bfe8d6', '#f6b5c8'], size: [8, 14], gravity: 0.05, life: 800 },
-  route: { glyphs: ['☁'], colors: ['#ffffff', '#e8dcf7'], size: [12, 18], gravity: -0.01, life: 1100 },
-  guestbook: { glyphs: ['•'], colors: ['#3b2a5c', '#6c5a95'], size: [5, 9], gravity: 0.06, life: 700 },
-  dawn: { glyphs: ['✦', '·'], colors: ['#ffd1a8', '#f6b5c8'], size: [8, 14], gravity: 0.01, life: 900 },
-  chaos: { glyphs: ['👻', '✖', '?'], colors: ['#bfe8d6', '#c9b6e4'], size: [14, 22], gravity: 0.03, life: 900 },
+  toys: { glyphs: ['★', '●', '■'], colors: ['#f3d27a', '#bfe8d6', '#f6b5c8'], size: [12, 20], gravity: 0.06, life: 1200 },
+  route: { glyphs: ['☁', '✦'], colors: ['#ffffff', '#e8dcf7', '#f3d27a'], size: [16, 26], gravity: -0.015, life: 1500 },
+  guestbook: { glyphs: ['✎', '•', '✦'], colors: ['#6c5a95', '#f6b5c8', '#f3d27a'], size: [12, 20], gravity: 0.05, life: 1100 },
+  dawn: { glyphs: ['✦', '☀', '·'], colors: ['#ffd1a8', '#f6b5c8', '#f3d27a'], size: [12, 22], gravity: 0.01, life: 1300 },
+  chaos: { glyphs: ['👻', '✖', '?'], colors: ['#bfe8d6', '#c9b6e4'], size: [18, 28], gravity: 0.03, life: 1100 },
 };
 
 interface P { x: number; y: number; vx: number; vy: number; born: number; life: number; g: string; c: string; s: number; rot: number; vr: number; grav: number }
@@ -37,7 +37,8 @@ const feature: Feature = {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const touch = isTouch();
-    const MAX = touch ? 20 : 40;
+    const MAX = touch ? 32 : 90;
+    const ribbon: { x: number; y: number; t: number }[] = []; // recent pointer path, drawn as a glowing comet tail
     const parts: P[] = [];
     let running = false;
     let lastX = -1, lastY = -1;
@@ -72,6 +73,26 @@ const feature: Feature = {
 
     const frame = (now: number) => {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      // comet tail: the last ~300 ms of pointer path, tapering and fading
+      while (ribbon.length && now - ribbon[0].t > 320) ribbon.shift();
+      if (ribbon.length > 1) {
+        const col = preset().colors[0];
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 16;
+        for (let i = 1; i < ribbon.length; i++) {
+          const k = i / ribbon.length;
+          ctx.globalAlpha = k * 0.75;
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 1 + k * 7;
+          ctx.beginPath();
+          ctx.moveTo(ribbon[i - 1].x, ribbon[i - 1].y);
+          ctx.lineTo(ribbon[i].x, ribbon[i].y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i];
         const t = (now - p.born) / p.life;
@@ -83,14 +104,14 @@ const feature: Feature = {
         ctx.rotate(p.rot);
         ctx.fillStyle = p.c;
         ctx.shadowColor = p.c;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 14;
         ctx.font = `${p.s}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(p.g, 0, 0);
         ctx.restore();
       }
-      if (parts.length) requestAnimationFrame(frame);
+      if (parts.length || ribbon.length > 1) requestAnimationFrame(frame);
       else { running = false; ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); }
     };
 
@@ -99,9 +120,12 @@ const feature: Feature = {
     } else {
       window.addEventListener('pointermove', (e) => {
         if (!enabled() || store.get('section.current') === 'nightlights' && !store.get('chaos.active')) return;
-        if (Math.hypot(e.clientX - lastX, e.clientY - lastY) < 14) return;
+        ribbon.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+        if (!running) { running = true; requestAnimationFrame(frame); }
+        if (Math.hypot(e.clientX - lastX, e.clientY - lastY) < 9) return;
         lastX = e.clientX; lastY = e.clientY;
         spawn(e.clientX, e.clientY);
+        if (Math.random() < 0.5) spawn(e.clientX + (Math.random() - 0.5) * 10, e.clientY + (Math.random() - 0.5) * 10);
       }, { passive: true });
       window.addEventListener('pointerdown', (e) => { if (enabled()) spawn(e.clientX, e.clientY, true); }, { passive: true });
     }

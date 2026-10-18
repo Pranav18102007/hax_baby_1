@@ -68,8 +68,40 @@ const feature: Feature = {
         bus.emit('memory:forgotten');
       });
     },
+  }, {
+    id: 'forget',
+    title: 'Forget me.exe',
+    icon: 'icon-bin',
+    width: 380,
+    height: 300,
+    mount(body) {
+      const v = store.get('visitor');
+      body.innerHTML = `
+        <div class="forget">
+          <p>Pip remembers <b>${v.visits} visit${v.visits === 1 ? '' : 's'}</b>, <b>${v.secretsFound.length} secret${v.secretsFound.length === 1 ? '' : 's'}</b> and all your settings, saved on this device only.</p>
+          <p>Wipe it all and meet Pip for the first time again?</p>
+          <div class="forget-btns">
+            <button type="button" class="os-button" data-yes>Yes, forget everything</button>
+            <button type="button" class="os-button" data-no>Keep my memories</button>
+          </div>
+          <p class="forget-done" hidden>Done. Pip has forgotten everything (except you, a little).
+            <button type="button" class="os-button" data-fresh>Start fresh ↻</button></p>
+        </div>`;
+      body.querySelector('[data-no]')!.addEventListener('click', () => bus.emit('app:close', 'forget'));
+      body.querySelector('[data-yes]')!.addEventListener('click', () => {
+        store.reset();
+        bus.emit('memory:forgotten');
+        body.querySelector<HTMLElement>('.forget-btns')!.hidden = true;
+        body.querySelector<HTMLElement>('.forget-done')!.hidden = false;
+        body.querySelector<HTMLElement>('[data-fresh]')!.focus();
+      });
+      body.querySelector('[data-fresh]')!.addEventListener('click', () => { window.scrollTo(0, 0); window.location.reload(); });
+    },
   }],
-  startMenu: [{ id: 'settings', label: 'Settings', icon: 'icon-settings', group: 'main', order: 10, run: () => bus.emit('app:open', 'settings') }],
+  startMenu: [
+    { id: 'settings', label: 'Settings', icon: 'icon-settings', group: 'main', order: 10, run: () => bus.emit('app:open', 'settings') },
+    { id: 'forget', label: 'Forget me…', icon: 'icon-bin', group: 'main', order: 12, run: () => bus.emit('app:open', 'forget') },
+  ],
 };
 
 export default feature;

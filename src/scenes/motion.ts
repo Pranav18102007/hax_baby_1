@@ -47,7 +47,12 @@ export function initMotion(): void {
   gsap.registerPlugin(ScrollTrigger);
 
   if (!isTouch() && !reducedMotion()) {
-    lenis = new Lenis({ lerp: 0.11, wheelMultiplier: 0.9 });
+    lenis = new Lenis({
+      lerp: 0.11,
+      wheelMultiplier: 0.9,
+      // let menus, windows and overlays scroll themselves instead of the page
+      prevent: (node: HTMLElement) => !!node.closest?.('#startmenu, #windows, .crib, .chaos-layer, [data-lenis-prevent], dialog, .overlay'),
+    });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((t) => lenis?.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);

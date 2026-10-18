@@ -89,10 +89,11 @@ async function mount(body: HTMLElement): Promise<() => void> {
 
   // drag and throw (Matter's mouse handles touch too)
   const mouse = Mouse.create(canvas);
-  mouse.pixelRatio = 1;
+  mouse.pixelRatio = dpr; // canvas is drawn at dpr × CSS size; Matter scales pointer coords by this
   const mc = MouseConstraint.create(engine, { mouse, constraint: { stiffness: 0.2, damping: 0.1, render: { visible: false } } });
   Composite.add(engine.world, mc);
   Events.on(mc, 'startdrag', () => audio.play('click'));
+  if (import.meta.env.DEV) Object.assign(canvas, { __toys: toys, __mc: mc }); // test hook (dev builds only)
 
   // collision sounds, scaled by impact speed and throttled
   let lastSound = 0;

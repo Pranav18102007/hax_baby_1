@@ -40,6 +40,8 @@ a { color: var(--accent); }
 #page { padding-bottom: calc(var(--taskbar-h) + var(--safe-b)); }
 
 /* Boot screen hides the page until Pip wakes */
+html:has(body.booting), body.booting { overflow: hidden; scrollbar-width: none; }
+html:has(body.booting)::-webkit-scrollbar { display: none; }
 body.booting #page,
 body.booting #taskbar { visibility: hidden; }
 

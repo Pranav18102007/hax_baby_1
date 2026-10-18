@@ -6,9 +6,19 @@ import { voice } from '../core/voice';
 
 const LINES = [
   'DreamOS 93  (c) Midnight Nursery',
-  'Checking nightlights ........ OK',
-  'Warming up lullabies ........ OK',
-  'Counting sheep .... 1, 2, 3, zzz',
+  'Detecting baby ....... 1 found (Pip)',
+  'Fluffing clouds ............... OK',
+  'Checking nightlights .......... OK',
+  'Warming up lullabies .......... OK',
+  'Counting sheep ..... 1, 2, 3, zzz',
+];
+
+const TIPS = [
+  'Tip: press M to mute, D for day and night.',
+  'Tip: Pip hates silence. Like, really hates it.',
+  'Tip: something in the sky is not just a star…',
+  'Tip: windows can be dragged, squished and stacked.',
+  'Tip: the Start menu has a very suspicious .exe.',
 ];
 
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
@@ -34,17 +44,26 @@ export async function runBoot(critical: HTMLImageElement[]): Promise<void> {
   const loading = preload(critical, setPct);
   const started = performance.now();
 
+  // rotating tips under the bar
+  const tip = boot.querySelector<HTMLElement>('.boot-tip')!;
+  let ti = Math.floor(Math.random() * TIPS.length);
+  tip.textContent = TIPS[ti];
+  const tipTimer = window.setInterval(() => { ti = (ti + 1) % TIPS.length; tip.textContent = TIPS[ti]; }, 1600);
+
   if (reducedMotion()) pre.textContent = lines.join('\n');
   else {
     for (const line of lines) {
       pre.textContent += (pre.textContent ? '\n' : '') + line;
-      await sleep(220);
+      audio.play('beep');
+      await sleep(330);
     }
   }
-  // at least 1.2 s on screen, at most 3 s before the button appears
-  await Promise.race([loading, sleep(3000)]);
+  // at least 2.6 s on screen (it's a show, not a wait), at most 4 s before the button appears
+  await Promise.race([loading, sleep(4000)]);
   const elapsed = performance.now() - started;
-  if (elapsed < 1200) await sleep(1200 - elapsed);
+  const least = reducedMotion() ? 1500 : 2600;
+  if (elapsed < least) await sleep(least - elapsed);
+  window.clearInterval(tipTimer);
   setPct(1);
   pre.textContent += `\nLoading dreams ......... 100%`;
 
