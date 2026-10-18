@@ -1,13 +1,18 @@
 import {
-  Scene, PerspectiveCamera, WebGLRenderer, Group, Mesh, SphereGeometry, CapsuleGeometry, ConeGeometry, TorusGeometry,
-  CylinderGeometry, ExtrudeGeometry, Shape, MeshToonMaterial, MeshBasicMaterial, HemisphereLight, DirectionalLight,
-  DataTexture, RedFormat, NearestFilter, CanvasTexture, SRGBColorSpace, Raycaster, Vector2, Color, Object3D,
-  BufferGeometry, LineBasicMaterial, Line, Vector3, RepeatWrapping, Material, Texture, CatmullRomCurve3, TubeGeometry,
+  Scene, PerspectiveCamera, WebGLRenderer, Group, Mesh, SphereGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry,
+  Shape, MeshPhysicalMaterial, MeshBasicMaterial, ShadowMaterial, PlaneGeometry, HemisphereLight, DirectionalLight,
+  CanvasTexture, SRGBColorSpace, Raycaster, Vector2, Color, Object3D, BufferGeometry, BufferAttribute, LineBasicMaterial,
+  Line, Vector3, RepeatWrapping, Material, Texture, CatmullRomCurve3, PMREMGenerator, ACESFilmicToneMapping,
+  PCFSoftShadowMap, Sprite, SpriteMaterial, AdditiveBlending, TorusGeometry, type MeshPhysicalMaterialParameters,
 } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
 /**
- * Pip in 3D, built from simple shapes (no model files): skull head with eye sockets and glowing eye-lights,
- * onesie, nightcap, sitting on a cloud. Outfits swap live. Everything here is loaded only when Fit Check opens.
+ * Pip in 3D. The body is a sculpted model (public/models/pip.glb, made by scripts/sculpt_pip.py from
+ * smooth-blended shapes) lit like a soft vinyl toy: glossy skull, plush fabric onesie and nightcap,
+ * soft shadows and room reflections. Outfits swap live; this module loads only when Fit Check opens.
  */
 
 export const HATS = ['Starry nightcap', 'Lavender nightcap', 'Party hat', 'Little crown', 'Just a bow'] as const;
@@ -15,21 +20,15 @@ export const SUITS = ['Cream hearts', 'Lavender stars', 'Mint stripes', 'Strawbe
 export const EXTRAS = ['Nothing', 'Star wand', 'Teddy', 'Balloon', 'Dream orb'] as const;
 export interface Fit { hat: number; suit: number; extra: number }
 
-const BONE = '#f6ecdc', PLUM = '#3b2a5c', SOCKET = '#4a2f3a', PINK = '#f6b5c8', GOLD = '#f3d27a', CREAM = '#fff5e8';
+const PLUM = '#3b2a5c', PINK = '#f6b5c8', GOLD = '#f3d27a', CREAM = '#fff5e8';
+const HEAD_C = new Vector3(0, 1.86, 0);
 
-function toonRamp(): DataTexture {
-  const t = new DataTexture(new Uint8Array([110, 175, 225, 255]), 4, 1, RedFormat);
-  t.minFilter = t.magFilter = NearestFilter;
-  t.needsUpdate = true;
-  return t;
-}
-
-/** Little repeating pattern textures for the onesies, drawn on a canvas. */
-function pattern(bg: string, fg: string, kind: 'hearts' | 'stars' | 'stripes' | 'dots'): CanvasTexture {
+/** Little repeating pattern textures for the onesies and caps, drawn on a canvas. */
+function pattern(bg: string, fg: string, kind: 'hearts' | 'stars' | 'stripes' | 'dots', rx = 4, ry = 3): CanvasTexture {
   const c = document.createElement('canvas');
-  c.width = c.height = 128;
+  c.width = c.height = 256;
   const g = c.getContext('2d')!;
-  g.fillStyle = bg; g.fillRect(0, 0, 128, 128);
+  g.fillStyle = bg; g.fillRect(0, 0, 256, 256);
   g.fillStyle = fg;
   const star = (x: number, y: number, r: number) => {
     g.beginPath();
@@ -41,17 +40,30 @@ function pattern(bg: string, fg: string, kind: 'hearts' | 'stars' | 'stripes' | 
     g.bezierCurveTo(x - s, y - s * 0.4, x - s * 0.35, y - s, x, y - s * 0.4);
     g.bezierCurveTo(x + s * 0.35, y - s, x + s, y - s * 0.4, x, y + s * 0.35); g.fill();
   };
-  if (kind === 'stripes') for (let y = 0; y < 128; y += 32) g.fillRect(0, y, 128, 14);
-  else for (const [x, y] of [[32, 32], [96, 96], [96, 32], [32, 96]]) {
-    if (kind === 'hearts') heart(x + ((y / 32) % 2) * 10, y, 14);
-    if (kind === 'stars') star(x, y, 11);
-    if (kind === 'dots') { g.beginPath(); g.arc(x, y, 9, 0, Math.PI * 2); g.fill(); }
+  if (kind === 'stripes') for (let y = 0; y < 256; y += 64) g.fillRect(0, y, 256, 26);
+  else for (const [x, y] of [[64, 64], [192, 192], [192, 64], [64, 192]]) {
+    if (kind === 'hearts') heart(x, y, 26);
+    if (kind === 'stars') star(x, y, 22);
+    if (kind === 'dots') { g.beginPath(); g.arc(x, y, 17, 0, Math.PI * 2); g.fill(); }
   }
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
   t.wrapS = t.wrapT = RepeatWrapping;
-  t.repeat.set(3, 3);
+  t.repeat.set(rx, ry);
+  t.anisotropy = 4;
   return t;
+}
+
+/** Wrap a pattern round a mesh: spherical UVs about a centre (good enough for round, plush shapes). */
+function sphereUV(geo: BufferGeometry, c: Vector3): void {
+  const p = geo.getAttribute('position');
+  const uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) - c.x, y = p.getY(i) - c.y, z = p.getZ(i) - c.z;
+    uv[i * 2] = Math.atan2(x, z) / (Math.PI * 2) + 0.5;
+    uv[i * 2 + 1] = Math.atan2(y, Math.hypot(x, z)) / Math.PI + 0.5;
+  }
+  geo.setAttribute('uv', new BufferAttribute(uv, 2));
 }
 
 function starShape(r: number): Shape {
@@ -61,6 +73,15 @@ function starShape(r: number): Shape {
     i ? s.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : s.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
   }
   return s;
+}
+
+function glowTexture(): CanvasTexture {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,241,196,1)'); gr.addColorStop(0.35, 'rgba(255,225,160,0.45)'); gr.addColorStop(1, 'rgba(255,220,150,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return new CanvasTexture(c);
 }
 
 export interface PipScene {
@@ -78,174 +99,210 @@ export interface PipScene {
   dispose(): void;
 }
 
-export function createPipScene(canvas: HTMLCanvasElement, opts: { still: boolean }): PipScene {
+export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: boolean; modelUrl: string }): Promise<PipScene> {
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.outputColorSpace = SRGBColorSpace;
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+
+  const disposables: (Material | Texture | BufferGeometry | { dispose(): void })[] = [];
   const scene = new Scene();
-  const camera = new PerspectiveCamera(34, 1, 0.1, 50);
-  camera.position.set(0, 1.7, 7.8);
+  const pmrem = new PMREMGenerator(renderer);
+  const room = new RoomEnvironment();
+  const env = pmrem.fromScene(room, 0.04).texture;
+  scene.environment = env;
+  scene.environmentIntensity = 0.45;
+  disposables.push(env, pmrem);
+  room.traverse((o) => { const m = o as Mesh; if (m.geometry) m.geometry.dispose(); });
+
+  const camera = new PerspectiveCamera(32, 1, 0.1, 50);
+  camera.position.set(0, 1.75, 7.6);
   camera.lookAt(0, 1.42, 0);
 
-  scene.add(new HemisphereLight('#d9c8f0', PLUM, 1.5));
-  const key = new DirectionalLight('#fff1d6', 2.2); key.position.set(2.5, 4, 4); scene.add(key);
-  const rim = new DirectionalLight(PINK, 1.2); rim.position.set(-3, 2, -3); scene.add(rim);
+  scene.add(new HemisphereLight('#e6d8ff', PLUM, 0.35));
+  const key = new DirectionalLight('#fff0dc', 2.1);
+  key.position.set(2.6, 5, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.left = key.shadow.camera.bottom = -2.2;
+  key.shadow.camera.right = key.shadow.camera.top = 2.2;
+  key.shadow.radius = 6;
+  key.shadow.bias = -0.0008;
+  key.shadow.normalBias = 0.02;
+  scene.add(key);
+  const rim = new DirectionalLight('#ffb8d2', 1.4); rim.position.set(-3.5, 2.5, -3); scene.add(rim);
+  const fill = new DirectionalLight('#b9a6ff', 0.45); fill.position.set(-3, 1, 3); scene.add(fill);
 
-  const ramp = toonRamp();
-  const disposables: (Material | Texture | BufferGeometry)[] = [ramp];
-  const mat = (color: string, extra: Partial<{ map: Texture; emissive: string; transparent: boolean; opacity: number }> = {}) => {
-    const m = new MeshToonMaterial({ color: new Color(color), gradientMap: ramp, map: extra.map ?? null, transparent: extra.transparent ?? false, opacity: extra.opacity ?? 1 });
-    if (extra.emissive) { m.emissive = new Color(extra.emissive); m.emissiveIntensity = 0.9; }
-    disposables.push(m);
-    return m;
+  // physically based materials: glossy vinyl skull, plush fabric, satin bow
+  const vinyl = (color: string, extra: MeshPhysicalMaterialParameters = {}) => {
+    const m = new MeshPhysicalMaterial({ color: new Color(color), roughness: 0.42, clearcoat: 0.45, clearcoatRoughness: 0.35, ...extra });
+    disposables.push(m); return m;
+  };
+  const plush = (color: string, extra: MeshPhysicalMaterialParameters = {}) => {
+    const m = new MeshPhysicalMaterial({ color: new Color(color), roughness: 0.85, sheen: 0.6, sheenRoughness: 0.6, sheenColor: new Color('#fff4f8'), ...extra });
+    disposables.push(m); return m;
   };
   const geo = <G extends BufferGeometry>(g: G) => { disposables.push(g); return g; };
-  const mesh = (g: BufferGeometry, m: Material, x = 0, y = 0, z = 0, sx = 1, sy = sx, sz = sx) => {
-    const o = new Mesh(g, m); o.position.set(x, y, z); o.scale.set(sx, sy, sz); return o;
+  const prim = (g: BufferGeometry, m: Material, x = 0, y = 0, z = 0, sx = 1, sy = sx, sz = sx) => {
+    const o = new Mesh(g, m); o.position.set(x, y, z); o.scale.set(sx, sy, sz); o.castShadow = true; return o;
   };
+
+  // ---- load the sculpted model ----
+  const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(opts.modelUrl);
+  const parts = new Map<string, Mesh>();
+  gltf.scene.updateMatrixWorld(true);
+  gltf.scene.traverse((o) => {
+    const m = o as Mesh;
+    if (!m.isMesh) return;
+    // the compressed file stores packed integer positions with the scale/offset on the node: unpack to plain
+    // world-space floats so every part below can be placed, re-parented and UV-wrapped in one coordinate system
+    const g = m.geometry;
+    for (const n of ['position', 'normal']) {
+      const a = g.getAttribute(n);
+      if (!a) continue;
+      const f = new Float32Array(a.count * 3);
+      for (let i = 0; i < a.count; i++) { f[i * 3] = a.getX(i); f[i * 3 + 1] = a.getY(i); f[i * 3 + 2] = a.getZ(i); }
+      g.setAttribute(n, new BufferAttribute(f, 3));
+    }
+    g.applyMatrix4(m.matrixWorld);
+    g.computeBoundingSphere();
+    m.position.set(0, 0, 0); m.quaternion.identity(); m.scale.set(1, 1, 1);
+    parts.set(m.name, m); m.castShadow = true; m.receiveShadow = true; disposables.push(g);
+  });
+  const part = (n: string) => { const m = parts.get(n); if (!m) throw new Error(`pip.glb is missing ${n}`); return m; };
 
   const root = new Group(); scene.add(root);   // turntable
   const pip = new Group(); root.add(pip);      // hops and bobs
 
-  // cloud
-  const cloudMat = mat(CREAM);
-  const ball = geo(new SphereGeometry(1, 28, 20));
-  [[0, 0.18, 0, 0.62], [-0.68, 0.12, 0.08, 0.46], [0.7, 0.14, 0.05, 0.5], [-0.3, 0.1, 0.42, 0.42], [0.36, 0.1, 0.4, 0.44], [-1.1, 0.04, 0, 0.32], [1.12, 0.05, 0.02, 0.34], [0.1, 0.12, -0.42, 0.45]]
-    .forEach(([x, y, z, r]) => root.add(mesh(ball, cloudMat, x, y, z, r, r * 0.82, r)));
+  const headSkin = vinyl('#ffffff', { vertexColors: true });
+  const handSkin = vinyl('#f6ecdc');
+  const suitMat = plush('#ffffff');
+  const capMat = plush('#ffffff');
+  const cloud = part('cloud'); cloud.material = plush(CREAM, { sheenColor: new Color('#e9ddff'), roughness: 0.95 }); root.add(cloud);
+  const body = part('body'); body.material = suitMat; sphereUV(body.geometry, new Vector3(0, 0.9, 0)); pip.add(body);
+  for (const n of ['foot_l', 'foot_r']) { const f = part(n); f.material = plush(PINK, { roughness: 0.7 }); pip.add(f); }
 
-  // onesie (body, legs, arms share one material so the pattern swaps everywhere)
-  const suitMat = mat('#ffffff');
-  const body = mesh(ball, suitMat, 0, 0.92, 0, 0.6, 0.62, 0.52); pip.add(body);
-  const limb = geo(new CapsuleGeometry(0.15, 0.32, 8, 16));
-  const footMat = mat(PINK);
+  // head group pivots about the skull centre so it can tilt towards you
+  const head = new Group(); head.position.copy(HEAD_C); pip.add(head);
+  const skull = part('head'); skull.material = headSkin; skull.position.sub(HEAD_C); head.add(skull);
+  const cap = part('cap'); cap.material = capMat; sphereUV(cap.geometry, HEAD_C.clone().add(new Vector3(0.2, 0.6, 0))); cap.position.sub(HEAD_C); head.add(cap);
+  const pompom = part('pompom'); pompom.material = plush('#fde7c8', { roughness: 1 }); pompom.position.sub(HEAD_C); head.add(pompom);
+  const bow = part('bow'); bow.material = plush(PINK, { roughness: 0.38, sheenRoughness: 0.3 }); bow.position.sub(HEAD_C); head.add(bow);
+  const bowHome = bow.position.clone();
+
+  // glowing eye-lights inside the sockets (they follow the pointer)
+  const lightMat = new MeshBasicMaterial({ color: '#fff4cf' }); disposables.push(lightMat);
+  const glowTex = glowTexture(); disposables.push(glowTex);
+  const lights: Group[] = [];
   for (const s of [-1, 1]) {
-    const leg = mesh(limb, suitMat, s * 0.26, 0.58, 0.32); leg.rotation.x = Math.PI / 2.2; pip.add(leg);
-    pip.add(mesh(ball, footMat, s * 0.27, 0.56, 0.62, 0.17, 0.15, 0.19));
+    const g = new Group(); g.position.set(s * 0.29, -0.01, 0.6);
+    g.add(new Mesh(geo(new SphereGeometry(0.058, 20, 14)), lightMat));
+    const halo = new Sprite(new SpriteMaterial({ map: glowTex, blending: AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 }));
+    disposables.push(halo.material); halo.scale.setScalar(0.22); g.add(halo);
+    head.add(g); lights.push(g);
   }
-  const skinMat = mat(BONE);
+
+  // arms: shoulder-local meshes on pivots so they can pose and wave
   const arms: Group[] = [];
   for (const s of [-1, 1]) {
     const shoulder = new Group(); shoulder.position.set(s * 0.5, 1.12, 0.05);
-    const arm = mesh(limb, suitMat, 0, -0.24, 0.06, 0.85); shoulder.add(arm);
-    shoulder.add(mesh(ball, skinMat, 0, -0.46, 0.1, 0.15));
-    shoulder.rotation.z = s * 0.5; shoulder.rotation.x = -0.35;
+    const sleeve = new Mesh(part('arm').geometry, suitMat); sleeve.castShadow = true;
+    const hand = new Mesh(part('hand').geometry, handSkin); hand.castShadow = true;
+    if (s < 0) { sleeve.scale.x = -1; hand.scale.x = -1; }
+    shoulder.add(sleeve, hand);
     pip.add(shoulder); arms.push(shoulder);
   }
+  sphereUV(part('arm').geometry, new Vector3(0, -0.2, 0));
   const [armL, armR] = arms;
 
-  // head
-  const head = new Group(); head.position.set(0, 1.86, 0); pip.add(head);
-  head.add(mesh(ball, skinMat, 0, 0, 0, 0.76, 0.7, 0.72));
-  const socketMat = mat(SOCKET);
-  const lightMat = new MeshBasicMaterial({ color: '#fff1c4' }); disposables.push(lightMat);
-  const lights: Mesh[] = [];
-  for (const s of [-1, 1]) {
-    const sock = mesh(ball, socketMat, s * 0.28, -0.02, 0.6, 0.2, 0.23, 0.08);
-    sock.lookAt(new Vector3(s * 0.28 * 3, -0.06, 3)); head.add(sock);
-    const l = mesh(ball, lightMat, s * 0.28, 0.0, 0.71, 0.055); head.add(l); lights.push(l);
-  }
-  const nose = mesh(geo(new ConeGeometry(0.05, 0.07, 3)), socketMat, 0, -0.18, 0.7); nose.rotation.x = Math.PI; head.add(nose);
-  const smile = mesh(geo(new TorusGeometry(0.09, 0.018, 8, 20, Math.PI)), socketMat, 0, -0.27, 0.66); smile.rotation.z = Math.PI; head.add(smile);
-  const cheekMat = mat(PINK, { transparent: true, opacity: 0.85 });
-  for (const s of [-1, 1]) { const c = mesh(ball, cheekMat, s * 0.47, -0.2, 0.5, 0.11, 0.07, 0.05); c.lookAt(new Vector3(s * 2, -0.4, 2)); head.add(c); }
+  // soft contact shadow under the cloud
+  const ground = new Mesh(geo(new PlaneGeometry(8, 8)), new ShadowMaterial({ opacity: 0.32, color: new Color('#120c24') }));
+  disposables.push(ground.material as Material);
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.42; ground.receiveShadow = true; root.add(ground);
 
-  // ---- hats ----
-  const hats: Group[] = [];
-  const nightcap = (color: string, dots: string) => {
-    const g = new Group();
-    const tex = pattern(color, dots, 'stars'); tex.repeat.set(3, 1.2); disposables.push(tex);
-    const capMat = mat('#ffffff', { map: tex });
-    const brim = mesh(geo(new TorusGeometry(0.66, 0.11, 14, 48)), mat(CREAM), 0, 0.3, 0); brim.rotation.x = Math.PI / 2; g.add(brim);
-    g.add(mesh(geo(new CylinderGeometry(0.34, 0.64, 0.55, 32, 1, true)), capMat, 0, 0.575, 0));
-    g.add(mesh(ball, capMat, 0, 0.85, 0, 0.34, 0.2, 0.34));
-    const tip = new Group(); tip.position.set(0, 0.86, 0); tip.rotation.z = -1.05; g.add(tip); // droops over to one side
-    tip.add(mesh(geo(new ConeGeometry(0.34, 0.8, 32, 1, true)), capMat, 0, 0.4, 0));
-    tip.add(mesh(ball, mat('#fde7c8'), 0, 0.82, 0, 0.15));
-    g.rotation.x = -0.08;
-    return g;
-  };
-  hats.push(nightcap('#fdf3e1', GOLD), nightcap('#c9b6e4', '#fff5e8'));
-  { // party hat
-    const g = new Group();
+  // ---- other hats (simple shapes, same materials) ----
+  const partyHat = new Group();
+  {
     const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d')!;
     x.fillStyle = '#bfe8d6'; x.fillRect(0, 0, 64, 64); x.fillStyle = PINK; for (let i = 0; i < 64; i += 16) x.fillRect(i, 0, 8, 64);
     const tex = new CanvasTexture(c); tex.colorSpace = SRGBColorSpace; tex.wrapS = RepeatWrapping; tex.repeat.set(3, 1); disposables.push(tex);
-    g.add(mesh(geo(new ConeGeometry(0.34, 0.9, 32, 1, true)), mat('#ffffff', { map: tex }), 0, 0.5, 0));
-    g.add(mesh(ball, mat(GOLD, { emissive: '#8a6a20' }), 0, 0.98, 0, 0.1));
-    g.position.set(0.18, 0.5, 0); g.rotation.z = -0.25;
-    hats.push(g);
+    partyHat.add(prim(geo(new ConeGeometry(0.34, 0.9, 40, 1, true)), vinyl('#ffffff', { map: tex, roughness: 0.5 }), 0, 0.5, 0));
+    partyHat.add(prim(geo(new SphereGeometry(0.11, 20, 14)), plush(GOLD, { roughness: 1 }), 0, 0.98, 0));
+    partyHat.position.set(0.18, 0.5, 0); partyHat.rotation.z = -0.25;
   }
-  { // crown
-    const g = new Group();
-    const goldMat = mat(GOLD, { emissive: '#6b5214' });
-    g.add(mesh(geo(new CylinderGeometry(0.36, 0.38, 0.2, 32, 1, true)), goldMat, 0, 0, 0));
-    const spike = geo(new ConeGeometry(0.07, 0.2, 8));
-    const gem = mat(PINK, { emissive: '#a04a6a' });
-    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; g.add(mesh(spike, goldMat, Math.sin(a) * 0.36, 0.18, Math.cos(a) * 0.36)); g.add(mesh(ball, gem, Math.sin(a) * 0.37, 0, Math.cos(a) * 0.37, 0.035)); }
-    g.position.set(0, 0.62, 0); g.rotation.z = -0.12;
-    hats.push(g);
+  const crown = new Group();
+  {
+    const gold = vinyl(GOLD, { metalness: 1, roughness: 0.25, clearcoat: 0 });
+    crown.add(prim(geo(new CylinderGeometry(0.36, 0.38, 0.2, 40, 1, true)), gold));
+    const spike = geo(new ConeGeometry(0.07, 0.2, 12)), gemG = geo(new SphereGeometry(0.04, 16, 12));
+    const gem = vinyl(PINK, { roughness: 0.1, clearcoat: 1, transmission: 0.3 });
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; crown.add(prim(spike, gold, Math.sin(a) * 0.36, 0.18, Math.cos(a) * 0.36)); crown.add(prim(gemG, gem, Math.sin(a) * 0.375, 0, Math.cos(a) * 0.375)); }
+    crown.position.set(0, 0.62, 0); crown.rotation.z = -0.12;
   }
-  hats.push(new Group()); // just a bow (the bow below is always on unless a nightcap/hat covers it)
-  const bow = new Group();
-  { const bm = mat(PINK); const lobe = geo(new ConeGeometry(0.1, 0.18, 16)); for (const s of [-1, 1]) { const l = mesh(lobe, bm, s * 0.1, 0, 0); l.rotation.z = (s * Math.PI) / 2; bow.add(l); } bow.add(mesh(ball, bm, 0, 0, 0, 0.05)); }
-  hats.forEach((h) => head.add(h));
-  head.add(bow);
+  head.add(partyHat, crown);
 
   // ---- extras ----
+  const ball = geo(new SphereGeometry(1, 32, 24));
   const extras: Group[] = [new Group()];
   { // wand, in the right hand
     const g = new Group();
-    g.add(mesh(geo(new CylinderGeometry(0.025, 0.025, 0.75, 8)), mat(CREAM), 0, 0.28, 0));
-    const st = mesh(geo(new ExtrudeGeometry(starShape(0.22), { depth: 0.05, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 })), mat(GOLD, { emissive: '#8a6a20' }), 0, 0.72, -0.025);
+    g.add(prim(geo(new CylinderGeometry(0.025, 0.025, 0.75, 12)), vinyl(CREAM), 0, 0.28, 0));
+    const st = prim(geo(new ExtrudeGeometry(starShape(0.22), { depth: 0.05, bevelEnabled: true, bevelSize: 0.025, bevelThickness: 0.025, bevelSegments: 3 })), vinyl(GOLD, { metalness: 0.8, roughness: 0.3, emissive: new Color('#6b5214'), emissiveIntensity: 0.5 }), 0, 0.72, -0.025);
     g.add(st); g.userData.spin = st;
-    g.position.set(0, -0.48, 0.12); g.rotation.set(0.25, 0, -1.35); // points straight up out of the raised hand
+    g.position.set(0, -0.48, 0.12); g.rotation.set(0.25, 0, -1.35);
     armR.add(g); extras.push(g);
   }
   { // teddy, hugged in the left arm
-    const g = new Group(); const fur = mat('#c79a6b'), snout = mat('#ead1b0');
-    g.add(mesh(ball, fur, 0, 0, 0, 0.17, 0.19, 0.15)); g.add(mesh(ball, fur, 0, 0.24, 0, 0.13));
-    for (const s of [-1, 1]) g.add(mesh(ball, fur, s * 0.1, 0.34, 0, 0.05));
-    g.add(mesh(ball, snout, 0, 0.21, 0.11, 0.05, 0.04, 0.04));
-    for (const s of [-1, 1]) g.add(mesh(ball, socketMat, s * 0.045, 0.27, 0.11, 0.018));
+    const g = new Group(); const fur = plush('#c79a6b', { sheenColor: new Color('#f3dcc0') }), snout = plush('#ead1b0'), eye = vinyl('#2a1b22', { roughness: 0.15 });
+    g.add(prim(ball, fur, 0, 0, 0, 0.17, 0.19, 0.15)); g.add(prim(ball, fur, 0, 0.24, 0, 0.13));
+    for (const s of [-1, 1]) g.add(prim(ball, fur, s * 0.1, 0.34, 0, 0.05));
+    g.add(prim(ball, snout, 0, 0.21, 0.11, 0.05, 0.04, 0.04));
+    for (const s of [-1, 1]) g.add(prim(ball, eye, s * 0.045, 0.27, 0.11, 0.018));
     g.position.set(-0.28, 0.92, 0.5); g.rotation.y = 0.3;
     pip.add(g); extras.push(g);
   }
-  { // balloon, string tied to the left hand
-    const g = new Group(); const bm = mat(PINK, { emissive: '#7a3048' });
-    const b = mesh(ball, bm, 0.15, 1.15, 0, 0.3, 0.36, 0.3); g.add(b);
-    g.add(mesh(geo(new ConeGeometry(0.04, 0.06, 8)), bm, 0.15, 0.82, 0)).children.at(-1)!.rotation.x = Math.PI;
-    const curve = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(0.08, 0.3, 0.02), new Vector3(0.02, 0.55, -0.02), new Vector3(0.15, 0.8, 0)]);
-    const str = new Line(geo(new BufferGeometry().setFromPoints(curve.getPoints(20))), new LineBasicMaterial({ color: CREAM }));
+  { // balloon above the raised left hand
+    const g = new Group(); const bm = vinyl(PINK, { roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1 });
+    const b = prim(ball, bm, 0.15, 1.15, 0, 0.3, 0.36, 0.3); g.add(b);
+    const knot = prim(geo(new ConeGeometry(0.04, 0.06, 10)), bm, 0.15, 0.78, 0); knot.rotation.x = Math.PI; g.add(knot);
+    const curve = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(0.08, 0.3, 0.02), new Vector3(0.02, 0.55, -0.02), new Vector3(0.15, 0.78, 0)]);
+    const str = new Line(geo(new BufferGeometry().setFromPoints(curve.getPoints(24))), new LineBasicMaterial({ color: CREAM }));
     disposables.push(str.material as Material);
     g.add(str); g.userData.float = b;
     g.position.set(-0.95, 0.95, 0.18); pip.add(g); extras.push(g);
   }
   { // dream orb floating beside Pip
     const g = new Group();
-    const orb = mesh(ball, new MeshBasicMaterial({ color: '#c9b6e4', transparent: true, opacity: 0.85 }), 0, 0, 0, 0.17);
-    disposables.push(orb.material as Material);
-    const glow = mesh(ball, new MeshBasicMaterial({ color: '#c9b6e4', transparent: true, opacity: 0.22 }), 0, 0, 0, 0.27);
-    disposables.push(glow.material as Material);
-    const ring = mesh(geo(new TubeGeometry(new CatmullRomCurve3(Array.from({ length: 24 }, (_, i) => new Vector3(Math.cos((i / 24) * Math.PI * 2) * 0.3, 0, Math.sin((i / 24) * Math.PI * 2) * 0.3)), true), 48, 0.012, 6, true)), mat(GOLD, { emissive: GOLD }));
-    ring.rotation.x = 0.4;
-    g.add(orb, glow, ring); g.position.set(0.95, 1.7, 0.2); g.userData.orbit = true;
+    const orb = prim(ball, vinyl('#c9b6e4', { roughness: 0.05, transmission: 0.6, thickness: 0.4, emissive: new Color('#7a5fb0'), emissiveIntensity: 0.6 }), 0, 0, 0, 0.17);
+    const halo = new Sprite(new SpriteMaterial({ map: glowTex, color: '#c9b6e4', blending: AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }));
+    disposables.push(halo.material); halo.scale.setScalar(0.8);
+    const ring = prim(geo(new TorusGeometry(0.3, 0.012, 8, 64)), vinyl(GOLD, { metalness: 1, roughness: 0.3 }));
+    ring.rotation.x = 1.2;
+    g.add(orb, halo, ring); g.position.set(0.95, 1.7, 0.2); g.userData.orbit = true;
     pip.add(g); extras.push(g);
   }
 
-  // ---- onesie patterns ----
-  const SUIT_TEX = [pattern(CREAM, PINK, 'hearts'), pattern('#c9b6e4', '#fff5e8', 'stars'), pattern('#bfe8d6', '#fff5e8', 'stripes'), pattern(PINK, '#fff5e8', 'dots'), pattern('#2b2350', GOLD, 'stars')];
-  disposables.push(...SUIT_TEX);
+  // ---- outfit textures ----
+  const SUIT_TEX = [pattern('#fff5e8', PINK, 'hearts'), pattern('#c9b6e4', '#fff5e8', 'stars'), pattern('#bfe8d6', '#fff5e8', 'stripes'), pattern(PINK, '#fff5e8', 'dots'), pattern('#2b2350', GOLD, 'stars')];
+  const CAP_TEX = [pattern('#fdf3e1', '#e8b84a', 'stars', 5, 3), pattern('#c9b6e4', '#fff5e8', 'stars', 5, 3)];
+  disposables.push(...SUIT_TEX, ...CAP_TEX);
 
   let fit: Fit = { hat: 0, suit: 0, extra: 0 };
   const setFit = (f: Fit) => {
     fit = f;
-    hats.forEach((h, i) => { h.visible = i === f.hat; });
-    bow.visible = f.hat !== 2 && f.hat !== 3; // nightcaps keep the bow on the brim, the bow-only look puts it on the head
-    if (f.hat <= 1) { bow.position.set(-0.36, 0.52, 0.5); bow.rotation.set(0, -0.4, 0.3); }
-    else { bow.position.set(-0.36, 0.5, 0.38); bow.rotation.set(0, -0.4, 0.4); }
+    const nightcap = f.hat <= 1;
+    cap.visible = pompom.visible = nightcap;
+    if (nightcap) { capMat.map = CAP_TEX[f.hat]; capMat.needsUpdate = true; }
+    partyHat.visible = f.hat === 2;
+    crown.visible = f.hat === 3;
+    bow.visible = f.hat !== 2 && f.hat !== 3;
+    bow.position.copy(bowHome);
+    if (f.hat === 4) bow.position.add(new Vector3(0.02, 0.12, -0.06)); // sits on the bare head
     suitMat.map = SUIT_TEX[f.suit]; suitMat.needsUpdate = true;
     extras.forEach((e, i) => { e.visible = i === f.extra; });
-    // arms pose: hugging the teddy, holding the balloon up, waving the wand
     armL.rotation.set(f.extra === 2 ? -1.0 : f.extra === 3 ? -0.2 : -0.35, f.extra === 2 ? 0.6 : 0, f.extra === 3 ? -1.2 : -0.5);
     armR.rotation.set(f.extra === 1 ? -0.3 : -0.35, 0, f.extra === 1 ? 1.35 : 0.5);
   };
@@ -259,7 +316,7 @@ export function createPipScene(canvas: HTMLCanvasElement, opts: { still: boolean
   const resize = (w: number, h: number) => {
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
-    camera.position.z = camera.aspect < 0.8 ? 9.2 : 7.2;
+    camera.position.z = camera.aspect < 0.8 ? 9.4 : 7.6;
     camera.updateProjectionMatrix();
   };
 
@@ -271,18 +328,17 @@ export function createPipScene(canvas: HTMLCanvasElement, opts: { still: boolean
     yaw += vel; vel *= 0.92;
     root.rotation.y = yaw;
     root.rotation.x = pitch;
-    // idle: breathing bob, head tilt towards the pointer, eye-lights follow, blink
     const bob = opts.still ? 0 : Math.sin(t * 2) * 0.03;
     hop = Math.max(0, hop - dt * 2.4);
     pip.position.y = bob + Math.sin(hop * Math.PI) * 0.35;
     head.rotation.y += ((lookX * 0.35) - head.rotation.y) * 0.08;
     head.rotation.x += ((-lookY * 0.2) - head.rotation.x) * 0.08;
     eyeX += (lookX - eyeX) * 0.15; eyeY += (lookY - eyeY) * 0.15;
-    lights.forEach((l, i) => { l.position.x = (i ? 0.28 : -0.28) + eyeX * 0.07; l.position.y = eyeY * 0.07; });
+    lights.forEach((l, i) => { l.position.x = (i ? 0.29 : -0.29) + eyeX * 0.06; l.position.y = -0.01 + eyeY * 0.06; });
     blinkAt -= dt;
-    const blink = blinkAt < 0 && blinkAt > -0.14 ? 0.15 : 1;
+    const blink = blinkAt < 0 && blinkAt > -0.14 ? 0.12 : 1;
     if (blinkAt < -0.14) blinkAt = 2 + Math.random() * 3;
-    lights.forEach((l) => { l.scale.y = 0.055 * blink; });
+    lights.forEach((l) => { l.scale.y = blink; });
     if (wave > 0) { wave = Math.max(0, wave - dt); armR.rotation.z = 2.4 + Math.sin(t * 14) * 0.35; armR.rotation.x = -0.2; if (wave === 0) setFit(fit); }
     const ex = extras[fit.extra];
     if (ex.userData.spin) (ex.userData.spin as Object3D).rotation.y = t * 2;

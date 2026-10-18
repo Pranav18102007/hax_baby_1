@@ -67,7 +67,14 @@ async function mount(body: HTMLElement): Promise<() => void> {
   const { createPipScene, HATS, SUITS, EXTRAS } = await import('./fit3d');
   const LISTS = { hat: HATS, suit: SUITS, extra: EXTRAS } as const;
   const still = reducedMotion();
-  const pip = createPipScene(canvas, { still });
+  let pip: Awaited<ReturnType<typeof createPipScene>>;
+  try {
+    pip = await createPipScene(canvas, { still, modelUrl: '/models/pip.glb' });
+  } catch {
+    body.innerHTML = `<div class="fit-fallback"><img src="${url('pip-default', 512)}" alt="Pip in a starry nightcap" width="220" height="220"><p>Pip’s 3D wardrobe didn’t load this time, so here’s the 2D look. Still a 10/10. Close and reopen to try again.</p></div>`;
+    return () => {};
+  }
+  if (!canvas.isConnected) { pip.dispose(); return () => {}; }
   stage.querySelector('.fit-loading')?.remove();
 
   let fit = loadFit();
