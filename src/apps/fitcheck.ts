@@ -150,7 +150,9 @@ async function mount(body: HTMLElement): Promise<() => void> {
   });
 
   // size + only render while visible
-  const ro = new ResizeObserver(() => { const r = stage.getBoundingClientRect(); if (r.width && r.height) pip.resize(r.width, r.height); });
+  const fitSize = () => { const r = stage.getBoundingClientRect(); if (r.width && r.height) pip.resize(r.width, r.height); };
+  fitSize(); // size straight away; the observer keeps it right afterwards
+  const ro = new ResizeObserver(fitSize);
   ro.observe(stage);
   const io = new IntersectionObserver(([en]) => { if (en.isIntersecting && !document.hidden) pip.start(); else pip.stop(); });
   io.observe(stage);
