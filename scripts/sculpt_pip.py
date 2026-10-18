@@ -70,7 +70,7 @@ def head_sdf(p):
     d = ellipsoid(p, HEAD_C, (0.78, 0.71, 0.74))
     d = smin(d, ellipsoid(p, (0, 1.66, 0.1), (0.64, 0.5, 0.62)), 0.18)   # chubby cheeks / jaw
     for s in (-1, 1):
-        d = smin(d, sphere(p, (s * 0.46, 1.64, 0.4), 0.2), 0.12)         # cheek apples
+        d = smin(d, ellipsoid(p, (s * 0.47, 1.62, 0.46), (0.25, 0.22, 0.24)), 0.1)  # round, puffy cheek apples
     for c in SOCKETS:
         d = ssub(d, ellipsoid(p, c + (0, 0, 0.06), (0.205, 0.245, 0.2)), 0.05)  # big hollow eye sockets
     d = ssub(d, ellipsoid(p, (0, 1.665, 0.735), (0.05, 0.035, 0.06)), 0.02)       # little nose
@@ -92,7 +92,7 @@ def head_colors(v):
     w = np.clip((0.035 - sm) * 45, 0, 1)[:, None]
     col = col * (1 - w) + dark * w
     for s in (-1, 1):   # soft blush
-        w = np.clip(1 - length((v - (s * 0.47, 1.62, 0.5)) / (0.17, 0.11, 0.2)), 0, 1)[:, None] ** 1.5 * 0.75
+        w = np.clip(1 - length((v - (s * 0.5, 1.6, 0.6)) / (0.19, 0.13, 0.22)), 0, 1)[:, None] ** 1.5 * 0.8
         col = col * (1 - w) + blush * w
     return col
 
