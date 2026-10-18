@@ -133,7 +133,7 @@ function render(root: HTMLElement): () => void {
       form.reset(); updateLeft();
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       audio.play('sparkle');
-      voice.say('V05', send, true);
+      voice.say('V30', send, true);
       announce('Your wish was sent');
     };
 

@@ -65,7 +65,7 @@ function initLamps(): void {
       audio.play('chirp');
       if (found === 1) voice.say('V05', l, true);
     }
-    if (found === 6) { room?.classList.add('all-lit'); audio.play('sparkle'); }
+    if (found === 6) { room?.classList.add('all-lit'); audio.play('sparkle'); voice.say('V29', room, true); }
   };
   document.querySelector('.light-all')?.addEventListener('click', () => lamps.forEach((l) => light(l, true)));
 

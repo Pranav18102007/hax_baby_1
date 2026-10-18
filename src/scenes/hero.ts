@@ -25,6 +25,24 @@ export function setRestingFace(face: Face): void {
   setFace(face);
 }
 
+/** Leave the site alone for a minute and Pip dozes off ("five more minutes…"); any input wakes Pip up. */
+function initIdle(): void {
+  let timer = 0, dozing = false;
+  const doze = () => {
+    if (document.hidden || store.get('chaos.active')) return arm();
+    dozing = true;
+    setFace('sleepy');
+    voice.say('V31', pip());
+  };
+  const arm = () => { window.clearTimeout(timer); timer = window.setTimeout(doze, 60_000); };
+  const wake = () => {
+    if (dozing) { dozing = false; setFace(restingFace); }
+    arm();
+  };
+  ['pointermove', 'pointerdown', 'keydown', 'scroll', 'wheel', 'touchstart'].forEach((ev) => window.addEventListener(ev, wake, { passive: true }));
+  arm();
+}
+
 function initEyes(): void {
   const el = pip();
   const eyes = [...el.querySelectorAll<HTMLElement>('.eye i')];
@@ -139,6 +157,7 @@ function initPortal(): void {
 
 export function initHero(): void {
   initEyes();
+  initIdle();
   initPoke();
   initLetters();
   initPortal();

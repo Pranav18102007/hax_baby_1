@@ -34,7 +34,10 @@ function generated(title: string, seed: number, scale: ScaleId, bpm: number): Tr
 
 const SIDE_A: Track[] = [...SONGS.map(fromSong), generated("Pip's own: Moonlight", 1204, 'moonlight', 72)];
 /** Recorded outtakes in /public/assets/voice/outtakes (add filenames as they land). */
-const SIDE_B: { title: string; file: string }[] = voiceFiles.outtakes as { title: string; file: string }[];
+const SIDE_B: { title: string; file: string }[] = [
+  ...((voiceFiles as { songs?: { title: string; file: string }[] }).songs ?? []),
+  ...(voiceFiles.outtakes as { title: string; file: string }[]).map((o) => ({ title: o.title, file: `outtakes/${o.file}` })),
+];
 
 const player = {
   side: 'A' as 'A' | 'B',
@@ -98,7 +101,7 @@ function playB(): void {
   const t = SIDE_B[player.index];
   if (!t) return;
   player.el?.pause();
-  player.el = new Audio(`/assets/voice/outtakes/${t.file}`);
+  player.el = new Audio(`/assets/voice/${t.file}`);
   player.el.muted = store.get('sound.muted');
   player.el.addEventListener('ended', () => { player.index = (player.index + 1) % SIDE_B.length; playB(); });
   void player.el.play().catch(() => undefined);

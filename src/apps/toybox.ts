@@ -131,7 +131,7 @@ async function mount(body: HTMLElement): Promise<() => void> {
         goal.textContent = 'Tower! Pip is very impressed. ★';
         goal.classList.add('won');
         audio.play('sparkle');
-        voice.giggle(canvas);
+        voice.say('V20', canvas, true);
       }
     } else towerSince = 0;
   };

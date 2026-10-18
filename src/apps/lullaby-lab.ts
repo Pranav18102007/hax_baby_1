@@ -4,6 +4,7 @@ import { store } from '../core/store';
 import { bus } from '../core/bus';
 import { url } from '../core/assets';
 import { reducedMotion } from '../core/a11y';
+import { voice } from '../core/voice';
 import { SCALES, type ScaleId, freq, makeMelody, makeReverb, musicBoxNote } from '../core/music';
 
 /**
@@ -174,6 +175,7 @@ function mount(body: HTMLElement): () => void {
     melody = makeMelody(seed, scale);
     step = 0;
     audio.play('sparkle');
+    voice.say('V32', body.querySelector('[data-new]'));
   });
 
   // the wind-up key: drag around in circles (4 turns = full)
