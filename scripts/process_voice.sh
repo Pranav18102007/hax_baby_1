@@ -20,7 +20,7 @@ done
 songs=()
 mkdir -p "$OUT/songs"
 SONGFX="highpass=f=80,loudnorm=I=-18:TP=-1.5,aresample=44100,asetrate=44100*1.1225,aresample=44100,atempo=0.8909"
-declare -A SONGNAME=([S01]="Pip sings: Twinkle, Twinkle" [S02]="Pip sings: Rock-a-bye Baby" [S03]="Pip sings: Hush, Little Baby")
+declare -A SONGNAME=([S01]="Pip sings: Twinkle, Twinkle" [S02]="Pip sings: Hush, Little Baby" [S03]="Pip sings: Rock-a-bye Baby")
 for f in "$IN"/S0*.{m4a,wav,mp3,ogg,aac,mp4}; do
   id=$(basename "$f"); id=${id%%_*}; id=${id%%.*}; id=$(echo "$id" | tr '[:lower:]' '[:upper:]')
   ffmpeg -v error -y -i "$f" -af "$SONGFX" -ac 1 -b:a 80k "$OUT/songs/$id.mp3" && songs+=("{\"title\":\"${SONGNAME[$id]:-Pip sings}\",\"file\":\"songs/$id.mp3\"}") && echo "song $id"
