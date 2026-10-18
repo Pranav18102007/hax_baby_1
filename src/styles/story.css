@@ -1,0 +1,108 @@
+/* ---------- S3 Story: scroll-told, reversible, one thing to do per chapter ---------- */
+.story { position: relative; background: #120f26; }
+.story-dots { position: sticky; top: 46vh; z-index: 6; height: 0; margin: 0; padding: 0 14px 0 0; list-style: none; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
+.story-dots li { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 245, 232, 0.35); box-shadow: 0 0 0 2px rgba(18, 15, 38, 0.5); transition: transform 0.3s, background 0.3s; }
+.story-dots li.on { background: var(--gold); transform: scale(1.35); box-shadow: 0 0 12px rgba(243, 210, 122, 0.8); }
+
+.beat { position: relative; min-height: 100dvh; display: grid; align-content: start; justify-items: center; padding: 76px 16px 40px; overflow: hidden; isolation: isolate; }
+.beat .paint img { transform: scale(var(--zoom, 1)); transform-origin: 50% 60%; will-change: transform; }
+/* soft edges so one painting dissolves into the next instead of butting up against it */
+.paint.blend img { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%); }
+.paint.blend::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(18, 15, 38, 0.55) 100%); }
+
+.beat .parchment { position: relative; z-index: 5; max-width: 600px; padding: 14px 20px 12px; opacity: 0; transform: translateY(16px); transition: opacity 0.7s, transform 0.7s var(--ease-out); }
+.beat.on .parchment, .story.still .parchment { opacity: 1; transform: none; }
+.parchment p { margin: 0; }
+.parchment .chapter { margin-bottom: 6px; font-family: var(--font-pixel); font-weight: 400; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; color: #8a6fc4; }
+.parchment .beat-hint { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin-top: 10px; padding-top: 8px; border-top: 2px dashed #e8cfa0; font-size: 15px; font-weight: 700; color: #6c5a95; }
+.awake-count { font-family: var(--font-pixel); font-size: 18px; color: var(--accent); }
+
+/* drifting dream dust */
+.beat-dust { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.8;
+  background: radial-gradient(2px 2px at 10% 20%, #ffe7a0, transparent 60%), radial-gradient(2px 2px at 30% 70%, #fff, transparent 60%), radial-gradient(3px 3px at 55% 35%, #ffd98a, transparent 60%),
+    radial-gradient(2px 2px at 75% 60%, #fff, transparent 60%), radial-gradient(2px 2px at 90% 25%, #f6b5c8, transparent 60%), radial-gradient(3px 3px at 45% 85%, #ffe7a0, transparent 60%);
+  background-size: 600px 500px; animation: dust 18s linear infinite; }
+@keyframes dust { to { background-position: 120px -500px; } }
+
+/* Chapter 1: knock on the glowing windows */
+.hotspots { position: absolute; inset: 0; z-index: 3; }
+.hotspot { position: absolute; width: 52px; height: 52px; translate: -50% -50%; border-radius: 50%; cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(255, 231, 160, 0.85), 0 0 18px 6px rgba(255, 210, 120, 0.55); animation: knock 2.4s ease-in-out var(--d, 0s) infinite; }
+.hotspot::after { content: '?'; position: absolute; right: -6px; top: -10px; font-family: var(--font-display); font-size: 20px; color: #fffbe8; text-shadow: 0 0 8px #ffd27a, 0 2px 0 #3b2a5c; }
+.hotspot.met { animation: none; box-shadow: 0 0 0 2px rgba(201, 182, 228, 0.7), 0 0 10px 2px rgba(201, 182, 228, 0.4); }
+.hotspot.met::after { content: '…'; }
+.hotspot:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+@keyframes knock { 50% { box-shadow: 0 0 0 4px rgba(255, 231, 160, 0.95), 0 0 30px 10px rgba(255, 210, 120, 0.7); } }
+
+/* Chapter 2: the clouds part and the two hands meet (both follow --m and --part) */
+.beat-cloud { position: absolute; z-index: 2; bottom: -10%; width: 78vw; max-width: 1200px; height: auto; pointer-events: none; opacity: 0.95; filter: drop-shadow(0 -10px 30px rgba(18, 15, 38, 0.35)); }
+.beat-cloud.cl { left: -18%; transform: translateX(calc(var(--part, 0) * -40vw)); }
+.beat-cloud.cr { right: -18%; transform: translateX(calc(var(--part, 0) * 40vw)) scaleX(-1); }
+.hand { position: absolute; z-index: 3; height: auto; pointer-events: none; opacity: calc(0.2 + var(--m, 0)); }
+.hand-moon { left: -2%; top: 18%; width: 52vw; max-width: 760px; transform: translate(calc((1 - var(--m, 0)) * -36vw), calc((1 - var(--m, 0)) * -24vh)); }
+.hand-pip-btn { position: absolute; z-index: 4; right: -1%; bottom: 4%; width: 40vw; max-width: 560px; aspect-ratio: 1.3; cursor: grab; touch-action: none;
+  transform: translate(calc((1 - var(--m, 0)) * 28vw), calc((1 - var(--m, 0)) * 28vh)); }
+.hand-pip-btn.grab { cursor: grabbing; }
+.hand-pip-btn .hand { position: static; width: 100%; opacity: 1; }
+.hand-pip-btn:focus-visible { outline: 3px dashed var(--gold); outline-offset: -20px; border-radius: 30px; }
+.spark { position: absolute; z-index: 4; left: 49%; top: 54%; width: 24px; height: 24px; translate: -50% -50%; border-radius: 50%; background: #fffbe8;
+  box-shadow: 0 0 30px 14px #ffe7a0, 0 0 80px 30px rgba(255, 210, 120, 0.6); opacity: 0; transform: scale(0.2); transition: opacity 0.3s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; }
+.spark.boop { opacity: 1; transform: scale(1); animation: sparkpulse 1.6s ease-in-out 0.5s infinite; }
+@keyframes sparkpulse { 50% { transform: scale(1.35); } }
+
+/* Chapter 3: the star (positions come from story.ts, so it reverses with the scroll) */
+.falling-star { position: absolute; z-index: 4; min-width: 52px; min-height: 52px; translate: -50% -50%; transform: scale(var(--sc, 1)); font-size: clamp(46px, 5.6vw, 78px); line-height: 1; color: #fffbe8; cursor: pointer;
+  text-shadow: 0 0 14px #ffe7a0, 0 0 40px #ffd27a, 0 0 80px rgba(255, 200, 115, 0.6); transition: opacity 0.3s; }
+.falling-star.gone { opacity: 0; pointer-events: none; }
+.star-trail i { position: absolute; z-index: 3; width: 10px; height: 10px; translate: -50% -50%; border-radius: 50%; background: #fff1c4; box-shadow: 0 0 12px 4px rgba(255, 210, 120, 0.7); opacity: 0; pointer-events: none; }
+.star-trail i:nth-child(n + 3) { width: 7px; height: 7px; }
+.star-trail i:nth-child(n + 5) { width: 5px; height: 5px; }
+.cradle-glow { position: absolute; z-index: 2; width: min(42vw, 560px); aspect-ratio: 1; translate: -50% -55%; border-radius: 50%; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(255, 236, 180, 0.85) 0, rgba(255, 210, 120, 0.4) 30%, transparent 65%); }
+.cradle-pip { position: absolute; z-index: 4; width: clamp(110px, 14vw, 210px); aspect-ratio: 1; translate: -50% -80%; pointer-events: none; }
+.cradle-pip img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transform: scale(0.6); transition: opacity 0.45s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.beat.pip-asleep .cradle-pip, .beat.pip-awake .cradle-pip { pointer-events: auto; cursor: pointer; }
+.beat.pip-asleep .cp-asleep { opacity: 1; transform: scale(1); }
+.beat.pip-awake .cp-awake { opacity: 1; transform: scale(1.05); }
+.cradle-pip.wiggle img { animation: wobble 0.5s; }
+
+/* Chapter 4: tuck the ghosts in */
+.beat[data-beat='4'] { align-content: end; padding-bottom: 72px; }
+.sleepy-ghosts { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.sg { position: absolute; width: clamp(80px, 10vw, 140px); padding: 0; pointer-events: auto; cursor: pointer; opacity: var(--in, 0); }
+.sg img { display: block; width: 100%; height: auto; animation: doze 3.4s ease-in-out infinite; }
+.sg1 { left: 10%; top: 34%; transform: translateX(calc((1 - var(--in, 0)) * -30vw)); }
+.sg2 { left: 44%; top: 24%; transform: translateY(calc((1 - var(--in, 0)) * -30vh)); }
+.sg3 { right: 10%; top: 38%; transform: translateX(calc((1 - var(--in, 0)) * 30vw)); }
+.sg2 img { animation-delay: -1s; } .sg3 img { animation-delay: -2s; }
+@keyframes doze { 50% { translate: 0 8px; rotate: 4deg; } }
+.blanket { position: absolute; left: -8%; right: -8%; bottom: -4%; height: 0; border-radius: 40% 40% 14px 14px / 30% 30% 14px 14px; overflow: hidden; transition: height 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.35) 25%, transparent 25% 75%, rgba(255, 255, 255, 0.35) 75%) 0 0 / 18px 18px, var(--bk); box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.5), 0 6px 14px rgba(18, 15, 38, 0.35); }
+.blanket.b1 { --bk: #f6b5c8; } .blanket.b2 { --bk: #c9b6e4; } .blanket.b3 { --bk: #f3d27a; }
+.sg.tucked .blanket { height: 52%; }
+.sg.tucked img { animation-duration: 6s; filter: brightness(0.95); }
+.sg-z { position: absolute; right: -6px; top: -6px; font-family: var(--font-display); font-size: 26px; color: #fffbe8; text-shadow: 0 0 10px #c9b6e4, 0 2px 0 #3b2a5c; opacity: 0; }
+.sg.tucked .sg-z { animation: zzz 2.6s ease-in-out infinite; opacity: 1; }
+.sg:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; border-radius: 12px; }
+.beat-notes { position: absolute; left: 50%; bottom: 30%; z-index: 2; width: 0; height: 0; pointer-events: none; opacity: var(--notes, 0); }
+.beat-notes i { position: absolute; font-style: normal; font-size: 28px; color: #ffe7a0; text-shadow: 0 0 12px rgba(255, 210, 120, 0.8); animation: noteup 4.2s ease-in infinite; }
+.beat-notes i:nth-child(2) { animation-delay: -0.8s; left: 40px; } .beat-notes i:nth-child(3) { animation-delay: -1.6s; left: -50px; }
+.beat-notes i:nth-child(4) { animation-delay: -2.4s; left: 70px; } .beat-notes i:nth-child(5) { animation-delay: -3.2s; left: -20px; }
+@keyframes noteup { from { transform: translate(0, 0) rotate(-10deg); opacity: 0; } 15% { opacity: 1; } to { transform: translate(30px, -42vh) rotate(14deg); opacity: 0; } }
+.beat.all-asleep .paint::before { content: ''; position: absolute; inset: 0; z-index: 1; background: rgba(18, 15, 38, 0.35); transition: opacity 1.2s; pointer-events: none; }
+.beat.all-asleep .beat-notes { opacity: 0.4; }
+
+/* phones: crop each painting around its action, tap instead of drag */
+@media (max-width: 767px) {
+  .beat[data-beat='1'] .paint img { object-position: 32% 50%; }
+  .beat[data-beat='3'] .paint img { object-position: 80% 50%; }
+  .hand-moon { width: 82vw; top: 26%; }
+  .hand-pip-btn { width: 66vw; bottom: 6%; touch-action: manipulation; }
+  .spark { left: 46%; top: 58%; }
+  .beat-cloud { width: 120vw; }
+  .sg1 { left: 4%; top: 46%; } .sg2 { left: 38%; top: 36%; } .sg3 { right: 4%; top: 50%; }
+  .parchment .chapter { font-size: 16px; }
+  .story-dots { padding-right: 8px; }
+}
+.story.still .beat .paint img { transform: none; }
+@media (prefers-reduced-motion: reduce) { .beat-dust, .beat-notes i { animation: none; } }

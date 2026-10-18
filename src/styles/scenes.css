@@ -173,24 +173,7 @@
   .profile-list dd { margin-bottom: 8px; }
 }
 
-/* ---------- S3 Story ---------- */
-.beat { position: relative; min-height: 100dvh; display: grid; align-content: start; justify-items: center; gap: 16px; padding: 84px 16px 40px; overflow: hidden; isolation: isolate; }
-.beat .parchment { opacity: 0; transform: translateY(18px); transition: opacity 0.8s, transform 0.8s var(--ease-out); }
-.beat.seen .parchment { opacity: 1; transform: none; }
-.hand { position: absolute; z-index: 1; height: auto; pointer-events: none; transition: transform 1.8s var(--ease-out), opacity 1s; opacity: 0; }
-.hand-moon { left: -2%; top: 18%; width: 52vw; max-width: 760px; transform: translate(-25%, -18%); }
-.hand-pip { right: -1%; bottom: 4%; width: 40vw; max-width: 560px; transform: translate(25%, 18%); }
-.beat.seen .hand { opacity: 1; transform: none; }
-.spark { position: absolute; z-index: 2; left: 49%; top: 54%; width: 24px; height: 24px; border-radius: 50%; background: #fffbe8; box-shadow: 0 0 30px 14px #ffe7a0, 0 0 80px 30px rgba(255, 210, 120, 0.6); opacity: 0; transform: scale(0.2); transition: opacity 0.4s 1.7s, transform 0.6s 1.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.beat.seen .spark { opacity: 1; transform: scale(1); }
-.first-lullaby { margin-top: 8px; }
-.beat[data-beat='4'] { align-content: end; padding-bottom: 72px; }
-.beat[data-beat='4'] .parchment { order: -1; }
-@media (max-width: 767px) {
-  .hand-moon { width: 82vw; top: 22%; }
-  .hand-pip { width: 66vw; bottom: 8%; }
-  .spark { left: 46%; top: 56%; }
-}
+/* (story styles live in story.css) */
 
 /* ---------- S4 Dome ---------- */
 .dome { display: grid; place-items: center; }
@@ -303,36 +286,3 @@
 .room-object img { transition: opacity 0.45s; }
 .room-object img.assembling { opacity: 0; }
 
-/* Beat 3: the falling star lands in the cradle and becomes Pip */
-.falling-star { position: absolute; z-index: 2; left: 20%; top: 26%; font-size: clamp(28px, 4vw, 54px); color: #fffbe8; text-shadow: 0 0 14px #ffe7a0, 0 0 40px #ffd27a; opacity: 0; }
-.beat.seen .falling-star { animation: starfall 1.8s cubic-bezier(0.5, 0, 0.6, 1) 0.3s forwards; }
-@keyframes starfall {
-  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
-  15% { opacity: 1; }
-  60% { transform: translate(28vw, 10vh) scale(1.1); }
-  92% { opacity: 1; transform: translate(50vw, 34vh) scale(0.8); }
-  100% { opacity: 0; transform: translate(51vw, 36vh) scale(2.4); }
-}
-.cradle-pip { position: absolute; z-index: 2; left: 70%; top: 55%; width: clamp(110px, 15vw, 220px); aspect-ratio: 1; translate: -50% -50%; }
-.cradle-pip img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.5s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform: scale(0.6); }
-.beat.seen .cp-asleep { opacity: 1; transform: scale(1); transition-delay: 1.9s; }
-.beat.seen .cp-awake { opacity: 1; transform: scale(1.05); transition-delay: 3s; }
-.beat.seen .cp-asleep { animation: hideLater 0.4s 3s forwards; }
-@keyframes hideLater { to { opacity: 0; } }
-@media (max-width: 767px) {
-  .falling-star { left: 10%; top: 30%; }
-  @keyframes starfall { 0% { opacity: 0; transform: translate(0, 0) scale(0.6); } 15% { opacity: 1; } 92% { opacity: 1; transform: translate(62vw, 26vh) scale(0.8); } 100% { opacity: 0; transform: translate(63vw, 27vh) scale(2.4); } }
-  .cradle-pip { left: 76%; top: 60%; width: 34vw; }
-}
-
-/* Beat 4: little ghosts drift in and fall asleep one by one */
-.sleepy-ghosts { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.sg { position: absolute; width: clamp(70px, 10vw, 140px); height: auto; opacity: 0; transition: opacity 1s, transform 1.6s var(--ease-out), filter 1s; }
-.sg1 { left: 8%; top: 40%; transform: translateX(-30vw); }
-.sg2 { left: 44%; top: 30%; transform: translateY(-30vh); }
-.sg3 { right: 8%; top: 44%; transform: translateX(30vw); }
-.beat.seen .sg { opacity: 1; transform: none; animation: doze 3.4s ease-in-out infinite; }
-.beat.seen .sg1 { transition-delay: 0.2s; } .beat.seen .sg2 { transition-delay: 0.6s; } .beat.seen .sg3 { transition-delay: 1s; }
-.beat.seen .sg2 { animation-delay: -1s; } .beat.seen .sg3 { animation-delay: -2s; }
-@keyframes doze { 50% { translate: 0 8px; rotate: 4deg; } }
-@media (max-width: 767px) { .sg2 { left: 40%; top: 22%; } }

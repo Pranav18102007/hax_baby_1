@@ -20,8 +20,7 @@ function initSections(): void {
     (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('seen'); reveal.unobserve(e.target); } }),
     { threshold: 0.25 },
   );
-  document.querySelectorAll('.beat, .room, .growth, .profile, .route, .gb-window, .dawn').forEach((s) => reveal.observe(s));
-  initStorySounds();
+  document.querySelectorAll('.room, .growth, .profile, .route, .gb-window, .dawn').forEach((s) => reveal.observe(s));
 
   const moon = document.querySelector<HTMLElement>('.night-moon');
   const onScroll = () => {
@@ -30,23 +29,6 @@ function initSections(): void {
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
-}
-
-/** Each story beat makes its sound once, timed to its reveal animation (spec S3). */
-function initStorySounds(): void {
-  const later = (ms: number, fn: () => void) => window.setTimeout(fn, reducedMotion() ? Math.min(ms, 400) : ms);
-  const cues: Record<string, (beat: HTMLElement) => void> = {
-    '1': () => later(1400, () => audio.play('cricket')),
-    '2': () => { audio.play('shimmer'); later(1700, () => audio.play('chime')); },
-    '3': (b) => { later(2100, () => audio.play('twinkle')); later(3100, () => voice.say('V03', b.querySelector('.cradle-pip') ?? b, true)); },
-  };
-  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
-    if (!e.isIntersecting) return;
-    io.unobserve(e.target);
-    if (!store.get('audio.unlocked')) return;
-    cues[(e.target as HTMLElement).dataset.beat ?? '']?.(e.target as HTMLElement);
-  }), { threshold: 0.25 });
-  document.querySelectorAll<HTMLElement>('.beat[data-beat]').forEach((b) => { if (cues[b.dataset.beat!]) io.observe(b); });
 }
 
 function initOpeners(windows: WindowManager): void {

@@ -119,38 +119,67 @@
 
     <!-- S3 · Pip's story -->
     <section id="story" class="scene story" data-section="story" aria-label="Pip's story">
-      <article class="beat" data-beat="1">
-        <div class="paint"><img data-img="story-town" alt="A tiny town of round houses where little ghosts lie awake"></div>
-        <p class="parchment">Once, the Midnight Nursery town was far too quiet. Nobody could fall asleep.</p>
+      <ol class="story-dots" aria-hidden="true"><li></li><li></li><li></li><li></li></ol>
+
+      <article class="beat" data-beat="1" aria-labelledby="ch1">
+        <div class="paint blend"><img data-img="story-town" alt="A tiny town of round houses where little ghosts lie awake in their windows"></div>
+        <div class="beat-dust" aria-hidden="true"></div>
+        <div class="hotspots"></div>
+        <div class="parchment">
+          <p class="chapter" id="ch1">Chapter 1 · The too-quiet town</p>
+          <p>Once upon a midnight, the little town of Midnight Nursery was far too quiet. No crickets. No lullabies. Not one single snore.</p>
+          <p class="beat-hint">Tap a glowing window to meet a sleepless ghost · <span class="awake-count" aria-live="polite">7 still awake</span></p>
+        </div>
       </article>
-      <article class="beat" data-beat="2">
-        <div class="paint"><img data-img="story-clouds" alt=""></div>
+
+      <article class="beat" data-beat="2" aria-labelledby="ch2">
+        <div class="paint blend"><img data-img="story-clouds" alt="Golden light pouring through parting purple clouds"></div>
+        <img class="beat-cloud cl" data-img="hero-clouds" data-sizes="90vw" alt="" aria-hidden="true">
+        <img class="beat-cloud cr" data-img="hero-clouds" data-sizes="90vw" alt="" aria-hidden="true">
         <img class="hand hand-moon" data-img="moon-hand" data-sizes="(max-width: 767px) 70vw, 48vw" alt="The Moon's glowing hand reaching down">
-        <img class="hand hand-pip" data-img="pip-hand" data-sizes="(max-width: 767px) 60vw, 40vw" alt="Pip's tiny hand reaching up">
+        <button class="hand-pip-btn btn-reset" type="button" aria-label="Reach the little hand up to the Moon">
+          <img class="hand hand-pip" data-img="pip-hand" data-sizes="(max-width: 767px) 60vw, 40vw" alt="">
+        </button>
         <span class="spark" aria-hidden="true"></span>
-        <p class="parchment">So the sleepy Moon reached down into the dark…</p>
+        <div class="parchment">
+          <p class="chapter" id="ch2">Chapter 2 · A hand in the clouds</p>
+          <p>High above, the sleepy Moon heard all that silence. She stretched one glowing hand down through the clouds… and something very small reached back.</p>
+          <p class="beat-hint">Drag the little hand up to meet hers.</p>
+        </div>
       </article>
-      <article class="beat" data-beat="3">
-        <div class="paint"><img data-img="story-star" alt="A falling star drifting toward an empty cradle"></div>
-        <span class="falling-star" aria-hidden="true">✦</span>
-        <span class="cradle-pip" aria-hidden="true">
+
+      <article class="beat" data-beat="3" aria-labelledby="ch3">
+        <div class="paint blend"><img data-img="story-star" alt="A cosy nursery where a trail of starlight leads to an empty, glowing cradle"></div>
+        <span class="star-trail" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <button class="falling-star btn-reset" type="button" aria-label="Make a wish on the falling star">✦</button>
+        <span class="cradle-glow" aria-hidden="true"></span>
+        <button class="cradle-pip btn-reset" type="button" aria-label="Say hello to baby Pip">
           <img class="cp-asleep" data-img="pip-asleep" data-sizes="20vw" alt="">
           <img class="cp-awake" data-img="pip-happy" data-sizes="20vw" alt="">
-        </span>
-        <p class="parchment">…and a falling star landed in an empty cradle. Hello, Pip.</p>
+        </button>
+        <div class="parchment">
+          <p class="chapter" id="ch3">Chapter 3 · Plip!</p>
+          <p>From her fingertip fell one small, warm star. It tumbled down, down, down… and landed, <i>plip</i>, in an empty cradle. Hello, Pip.</p>
+          <p class="beat-hint">Tap the star to make a wish. Scroll back up and it flies home.</p>
+        </div>
       </article>
-      <article class="beat" data-beat="4">
-        <div class="paint">
-          <img class="theme-night" data-img="nursery-night" alt="Pip's nursery, where the ghosts fall asleep">
+
+      <article class="beat" data-beat="4" aria-labelledby="ch4">
+        <div class="paint blend">
+          <img class="theme-night" data-img="nursery-night" alt="Pip's nursery at night, full of soft clouds and fairy lights">
           <img class="theme-day" data-img="nursery-day" alt="">
         </div>
-        <span class="sleepy-ghosts" aria-hidden="true">
-          <img class="sg sg1" data-img="ghost-yawn" data-sizes="14vw" alt="">
-          <img class="sg sg2" data-img="ghost-nightcap" data-sizes="14vw" alt="">
-          <img class="sg sg3" data-img="ghost-teddy" data-sizes="14vw" alt="">
-        </span>
-        <p class="parchment">Pip hummed the very first lullaby. One by one, the whole town fell asleep.</p>
-        <button class="os-button first-lullaby" type="button">▶ Hear Pip's first lullaby</button>
+        <div class="beat-notes" aria-hidden="true"><i>♪</i><i>♫</i><i>♪</i><i>♬</i><i>♪</i></div>
+        <div class="sleepy-ghosts">
+          <button class="sg sg1 btn-reset" type="button" aria-label="Tuck in the yawning ghost"><img data-img="ghost-yawn" data-sizes="14vw" alt=""><span class="blanket b1" aria-hidden="true"></span><span class="sg-z" aria-hidden="true">z</span></button>
+          <button class="sg sg2 btn-reset" type="button" aria-label="Tuck in the ghost in the nightcap"><img data-img="ghost-nightcap" data-sizes="14vw" alt=""><span class="blanket b2" aria-hidden="true"></span><span class="sg-z" aria-hidden="true">z</span></button>
+          <button class="sg sg3 btn-reset" type="button" aria-label="Tuck in the ghost with the teddy"><img data-img="ghost-teddy" data-sizes="14vw" alt=""><span class="blanket b3" aria-hidden="true"></span><span class="sg-z" aria-hidden="true">z</span></button>
+        </div>
+        <div class="parchment">
+          <p class="chapter" id="ch4">Chapter 4 · The very first lullaby</p>
+          <p class="ch4-text">Pip didn't know any lullabies yet, so Pip made one up. One by one, the little ghosts yawned and snuggled down…</p>
+          <p class="beat-hint"><span class="tuck-hint">Tuck each ghost in.</span> <button class="os-button first-lullaby" type="button">▶ Hear Pip's first lullaby</button></p>
+        </div>
       </article>
     </section>
 

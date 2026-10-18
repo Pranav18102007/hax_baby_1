@@ -7,6 +7,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/os.css';
 import './styles/scenes.css';
+import './styles/story.css';
 
 import { store } from './core/store';
 import { bus } from './core/bus';
@@ -25,6 +26,7 @@ import { initTooltips } from './shell/tooltips';
 import { initHero } from './scenes/hero';
 import { initScenes, routeLight } from './scenes/misc';
 import { initRoute } from './scenes/route';
+import { initStoryScroll } from './scenes/story';
 import { initMotion } from './scenes/motion';
 
 function hydrate(): void {
@@ -76,6 +78,7 @@ async function start(): Promise<void> {
   initStartMenu(startItems);
   initScenes(windows);
   initMotion();
+  initStoryScroll();
   initRoute(routeLight);
 
   const lastSeen = store.get('visitor').lastSeen;
