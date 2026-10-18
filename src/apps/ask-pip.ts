@@ -32,6 +32,7 @@ const RULES: Rule[] = [
   { k: /\b(secret|easter|hidden|egg)/, a: 'A secret? Me? Hmm… try looking up at the sky. Or ask the sleepy sock what I hate most.' },
   { k: /\b(ghost|boo)/, a: 'The little ghosts are my friends. They can’t sleep without a lullaby, so I hum them one every night.' },
   { k: /\bmoon\b/, a: 'The Moon reached down and helped make me. She’s sort of my mum. She’s very sleepy.' },
+  { k: /\b(fit|outfit|clothes|wear|dress|3d|hat|onesie)/, a: 'Fit check! I have five hats, five onesies and a teddy. Come spin me round in 3D!', go: { label: '▶ Open Fit Check.exe', run: open('fitcheck') } },
   { k: /\b(colou?r|favou?rite)/, a: 'Lavender. And the colour of warm milk. And gold, the sparkly kind.' },
   { k: /\b(eat|food|milk|hungry|pancake|snack)/, a: 'Warm milk and pancakes. Not at the same time. …Okay, sometimes at the same time.' },
   { k: /\b(sleep|tired|nap|bed|yawn)/, a: 'I LOVE naps. My growth chart says I’m only 12% good at staying awake. Working on it. Zzz.' },

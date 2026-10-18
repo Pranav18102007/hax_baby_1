@@ -94,6 +94,6 @@ export const store = {
   /** Clear everything saved ("Forget me"). */
   reset(): void {
     // the store, plus what the extras keep on this device (stickers, wish jar, kept lullabies)
-    try { [STORAGE_KEY, 'pip.stickers', 'pip.wishjar', 'pip.lullabies'].forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
+    try { [STORAGE_KEY, 'pip.stickers', 'pip.wishjar', 'pip.lullabies', 'pip.fit'].forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
   },
 };

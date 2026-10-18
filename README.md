@@ -21,7 +21,7 @@ We built it in 48 hours as a team of three: **Anushka Bhalekar** designed the wo
 | **Required** | Who Pip is (profile + growth chart) · 5 projects (Lullaby Lab, Nightlight Collection, Rattle & Block Toys, Dream Delivery Route, Growth Chart) · scroll-told origin story · reacts to you (eye-tracking lights, poke Pip, sound with a mute toggle) · phone and tablet layouts · a hidden Easter egg |
 | **Tier 1** | Eyes follow the pointer (tap on phones) · scroll-driven story · day/night toggle that changes Pip's face and the palette · responsive · Easter egg |
 | **Tier 2** | Lullaby Lab with real Web Audio · lantern flashlight cursor in the dark gallery · delivery map path synced to scroll · physics toy box |
-| **Tier 3** | Live guestbook (serverless + Redis) · remembers returning visitors · ~100 Lighthouse |
+| **Tier 3** | **Fit Check.exe: Pip in 3D (Three.js)**, spin with drag/swipe/arrow keys, tap to wave, 5 hats × 5 onesies × 5 extras, eye-lights follow you, snap a PNG · live guestbook (serverless + Redis) · remembers returning visitors · Ask Pip chats back in Pip's voice · Lighthouse 95+ mobile, 99 desktop, 100 accessibility / best practices / SEO |
 | **Side quests** | Guestbook · section-aware sparkle cursor trail · hit-counter odometer · click sounds with an always-visible mute · Responsive Chaos Mode (Bad Dream Mode) |
 | **Extras** | DreamOS boot screen, taskbar, Start menu and draggable springy windows · CRT / LCD / 1-bit display modes · desktop pets (ghost kitten, moon bunny, sleepy bat) · peeking ghosts · Mixtape of real nursery rhymes · Bath Time · "I'm feeling sleepy" · a teddy that climbs the scroll-bar ladder (parachute down, rocket up) · a pixel cursor for every scene |
 | **The story** | Scroll-told and reversible (scroll back and the star flies home), with one thing to do in each chapter: knock on the sleepless ghosts' windows, reach the little hand up to the Moon, wish on the falling star, tuck the ghosts in |
@@ -53,7 +53,7 @@ The guestbook and counter use Vercel Functions (`/api`) with Upstash Redis. Set 
 
 ## How it's built
 
-- **Vite + TypeScript**, no framework. **GSAP** (ScrollTrigger) + **Lenis** for scroll, **Matter.js** (lazy-loaded) for the toy box, the **Web Audio API** for every sound and the music box.
+- **Vite + TypeScript**, no framework. **GSAP** (ScrollTrigger) + **Lenis** for scroll, **Matter.js** (lazy-loaded) for the toy box, **Three.js** (lazy-loaded) for the 3D Fit Check, the **Web Audio API** for every sound and the music box.
 - Every feature is a self-contained module listed in `src/features.config.ts`. The registry wires up its Start-menu items, windows and sounds, so features never touch each other.
 - `scripts/process_assets.py` slices sprite sheets, cuts out backgrounds and makes responsive WebP files.
 
@@ -63,6 +63,6 @@ The guestbook and counter use Vercel Functions (`/api`) with Upstash Redis. Set 
 - **Pip** and the original asset pack: [haX.baby](https://hax.baby/baby-problem) (Track 1 canon).
 - **All other artwork:** generated with ChatGPT image generation from our own prompts and art-directed by Anushka Bhalekar from the official Pip references (backgrounds, props, the teddy, pets, cursors).
 - **Voice of Pip:** every line (and the three sung lullabies on the Mixtape) recorded by Anushka Bhalekar, lightly cleaned up with AI audio editing (ChatGPT), then pitched and levelled in our build script.
-- **Code:** [GSAP](https://gsap.com) (Standard License, free), [Lenis](https://github.com/darkroomengineering/lenis) (MIT), [Matter.js](https://github.com/liabru/matter-js) (MIT), [Upstash](https://upstash.com) SDKs (MIT).
+- **Code:** [GSAP](https://gsap.com) (Standard License, free), [Lenis](https://github.com/darkroomengineering/lenis) (MIT), [Matter.js](https://github.com/liabru/matter-js) (MIT), [Three.js](https://github.com/mrdoob/three.js) (MIT), [Upstash](https://upstash.com) SDKs (MIT).
 - **Fonts:** Lilita One, Nunito and VT323 via Fontsource (SIL Open Font License).
 - **Melodies:** traditional nursery rhymes and lullabies, all public domain (Twinkle Twinkle, Brahms' Lullaby, Mary Had a Little Lamb, Frère Jacques, Row Row Row Your Boat, London Bridge, Hot Cross Buns), played on a synthesized music box with soft chords.

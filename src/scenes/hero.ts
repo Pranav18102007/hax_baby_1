@@ -127,6 +127,8 @@ function initLetters(): void {
   let seq: number[] = [];
   let seqTimer = 0;
   document.querySelectorAll<HTMLButtonElement>('.hero-letters .letter').forEach((b) => {
+    // drop the boing class when it finishes, otherwise it outranks :hover and the wobble never plays again
+    b.addEventListener('animationend', (e) => { if (e.animationName === 'boing') b.classList.remove('boing'); });
     b.addEventListener('click', () => {
       const i = Number(b.dataset.note);
       b.classList.remove('boing');

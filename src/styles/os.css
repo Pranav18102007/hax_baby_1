@@ -814,3 +814,30 @@ body.party #pip { animation: partybounce 0.4s ease-in-out 8; }
 }
 .win-body::-webkit-scrollbar-thumb:hover, .sm-items::-webkit-scrollbar-thumb:hover { background-color: rgba(201, 182, 228, 0.85); }
 .win-body::-webkit-scrollbar-button, .sm-items::-webkit-scrollbar-button { display: none; }
+
+/* ---------- Fit Check.exe (3D Pip) ---------- */
+.win-body.fit { padding: 0; display: flex; flex-direction: column; }
+.fit-stage { position: relative; flex: 1; min-height: 300px; overflow: hidden;
+  background: radial-gradient(ellipse 60% 55% at 50% 58%, #5a3f7a 0%, #2b2350 55%, #1a1733 100%); }
+.fit-stage::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.8;
+  background-image: radial-gradient(1.5px 1.5px at 12% 18%, #fff5e8 50%, transparent 51%), radial-gradient(1px 1px at 78% 12%, #fff5e8 50%, transparent 51%),
+    radial-gradient(2px 2px at 88% 40%, #f3d27a 50%, transparent 51%), radial-gradient(1px 1px at 30% 72%, #fff5e8 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 26%, #c9b6e4 50%, transparent 51%), radial-gradient(1px 1px at 8% 60%, #f3d27a 50%, transparent 51%); }
+.fit-stage::after { content: ''; position: absolute; left: 50%; bottom: 6%; width: 60%; height: 10%; translate: -50% 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(201, 182, 228, 0.45), transparent); }
+.fit-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; touch-action: none; cursor: grab; outline-offset: -4px; }
+.fit-stage canvas:active { cursor: grabbing; }
+.fit-hint { position: absolute; left: 0; right: 0; bottom: 6px; z-index: 2; margin: 0; text-align: center; font-family: var(--font-pixel); font-size: 18px; color: #fff5e8; opacity: 0.75; pointer-events: none; }
+.fit-loading { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; margin: 0; font-family: var(--font-pixel); font-size: 22px; color: #fff5e8; }
+.fit-bar { display: grid; gap: 6px; padding: 8px 10px 10px; background: var(--os-face); border-top: 2px solid var(--os-shadow); }
+.fit-row { display: grid; grid-template-columns: 64px 44px 1fr 44px; align-items: center; gap: 6px; }
+.fit-label { font-family: var(--font-pixel); font-size: 19px; color: var(--plum); }
+.fit-arrow { min-height: 40px; min-width: 44px; padding: 0; font-size: 16px; }
+.fit-name { display: block; text-align: center; font-family: var(--font-pixel); font-size: 20px; padding: 6px 4px; background: #fff; border: 2px solid; border-color: var(--os-shadow) var(--os-light) var(--os-light) var(--os-shadow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fit-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.fit-actions .os-button { flex: 1; min-height: 40px; font-size: 18px; white-space: nowrap; }
+.fit-actions [aria-pressed="true"] { border-color: var(--os-shadow) var(--os-light) var(--os-light) var(--os-shadow); background: #e6dcf4; }
+.fit-verdict { min-height: 1.3em; margin: 0; text-align: center; font-family: var(--font-display); font-size: 17px; color: var(--plum); }
+.fit-fallback { display: grid; justify-items: center; gap: 12px; padding: 24px; text-align: center; }
+.photo-booth figcaption { margin-top: 8px; text-align: center; }
+.fit-open { min-height: 40px; font-size: 16px; padding: 4px 8px; white-space: nowrap; }
