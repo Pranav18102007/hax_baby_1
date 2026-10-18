@@ -278,18 +278,26 @@ export function initStoryScroll(): void {
     story.querySelectorAll<HTMLImageElement>('img[loading="lazy"], img:not([loading])').forEach((im) => { im.loading = 'eager'; });
     io.disconnect();
   }, { rootMargin: '150% 0px' }).observe(story);
-  /** One pinned stage: the four chapters are stacked and each dissolves into the next as you scroll (P = 0..1). */
+  /**
+   * One pinned stage: the four chapters are stacked and each dissolves into the next as you scroll (P = 0..1).
+   * Each chapter gets its own share of the scroll (W); chapter 3 is longer so Pip can land, sit up in the cradle
+   * and giggle before chapter 4 starts to cover it (ACT = the part spent animating, the rest is a hold).
+   */
+  const W = beats.map((b) => (b.dataset.beat === '3' ? 2 : 1));
+  const ACT = W.map((w) => (w > 1 ? 1 : 0.92));
+  const A = W.map((_, i) => W.slice(0, i).reduce((x, y) => x + y, 0)); // where each chapter starts
+  const TOTAL = W.reduce((x, y) => x + y, 0);
   const renderStage = (P: number) => {
-    const s = P * beats.length; // 0..4, one unit per chapter
+    const u = P * TOTAL;
     let active = 0;
     beats.forEach((b, i) => {
-      const fadeIn = i === 0 ? 1 : smooth(i - 0.2, i + 0.02, s); // later chapters dissolve in on top
-      const gone = i < beats.length - 1 && s > i + 1.05; // and the one underneath is put away once covered
+      const fadeIn = i === 0 ? 1 : smooth(A[i] - 0.2, A[i] + 0.02, u); // later chapters dissolve in on top
+      const gone = i < beats.length - 1 && u > A[i + 1] + 0.05; // and the one underneath is put away once covered
       const o = gone ? 0 : fadeIn;
       b.style.opacity = o.toFixed(3);
       b.style.visibility = o <= 0.001 ? 'hidden' : 'visible';
       if (o > 0.6) active = i;
-      renderers[i](clamp((s - i) / 0.92));
+      renderers[i](clamp((u - A[i]) / ACT[i]));
     });
     beats.forEach((b, i) => { b.inert = i !== active; });
     if (active !== lastActive) { lastActive = active; dots.forEach((d, j) => d.classList.toggle('on', j === active)); }
@@ -309,7 +317,7 @@ export function initStoryScroll(): void {
     triggers.push(ScrollTrigger.create({
       trigger: story,
       start: 'top top',
-      end: () => `+=${window.innerHeight * (isTouch() ? 3.4 : 4.4)}`,
+      end: () => `+=${window.innerHeight * (isTouch() ? 0.85 : 1.1) * TOTAL}`,
       pin: true,
       anticipatePin: 1,
       refreshPriority: 10,
