@@ -21,7 +21,7 @@ audio.register('squeak', (t) => {
 const RISE = 1300, HOLD = 1100, DRAIN = 1150;
 
 /** Bath toys from the art pack when they exist (O19); otherwise the CSS fish swim alone. */
-const TOYS = ['bath-boat', 'bath-fish-a', 'bath-fish-b', 'bath-soap', 'bath-sponge'];
+const TOYS = ['bath-boat', 'bath-soap', 'bath-sponge', 'bath-bubbles'];
 
 const feature: Feature = {
   id: 'bathtime',
@@ -42,8 +42,10 @@ const feature: Feature = {
         `<button type="button" class="duck d${i}" tabindex="-1" aria-label="Squeak the duck" style="--dx:${6 + i * 15 + Math.random() * 6}%;--dd:${-i * 0.37}s;--ds:${0.7 + Math.random() * 0.5}"><img src="${url(DUCKS[i % 3], 384)}" alt="" draggable="false"></button>`).join('');
       const toys = TOYS.filter((n) => url(n)).map((n, i) =>
         `<img class="bath-toy" src="${url(n, 256)}" alt="" draggable="false" style="--tx:${12 + i * 19}%;--td:${-i * 0.5}s">`).join('');
-      const fish = Array.from({ length: 5 }, (_, i) =>
-        `<span class="fish f${i % 3}" style="--fy:${30 + i * 12}%;--fd:${-i * 1.3}s;--fs:${3.6 + Math.random() * 2}s"></span>`).join('');
+      const FISH = ['bath-fish-a', 'bath-fish-b'].map((n) => url(n, 128)).filter(Boolean);
+      const fish = Array.from({ length: 5 }, (_, i) => FISH.length
+        ? `<img class="fish-img" src="${FISH[i % FISH.length]}" alt="" draggable="false" style="--fy:${30 + i * 12}%;--fd:${-i * 1.3}s;--fs:${3.6 + Math.random() * 2}s">`
+        : `<span class="fish f${i % 3}" style="--fy:${30 + i * 12}%;--fd:${-i * 1.3}s;--fs:${3.6 + Math.random() * 2}s"></span>`).join('');
       const bubbles = Array.from({ length: 34 }, (_, i) =>
         `<button type="button" class="bubble" tabindex="-1" style="--x:${2 + Math.random() * 96}%;--d:${(i / 34) * 2.1}s;--s:${14 + Math.random() * 40}px;--w:${(Math.random() - 0.5) * 60}px" aria-label="Pop bubble"></button>`).join('');
       const foam = Array.from({ length: 26 }, (_, i) =>

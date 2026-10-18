@@ -764,3 +764,14 @@ body.party #pip { animation: partybounce 0.4s ease-in-out 8; }
 .sticker-pick { padding: 6px; background: #fff; border: 2px solid; border-color: var(--os-light) var(--os-shadow) var(--os-shadow) var(--os-light); cursor: pointer; }
 .sticker-pick img { width: 100%; height: auto; display: block; }
 .sticker-pick:hover { background: #fff8d6; }
+.fish-img { position: absolute; left: -80px; top: var(--fy); width: clamp(44px, 5vw, 70px); height: auto; animation: swim var(--fs) linear var(--fd) infinite; pointer-events: none; }
+/* painted round-2 art */
+.blanket.painted { background: none; box-shadow: none; border-radius: 0; overflow: visible; height: auto; left: 18%; right: 18%; bottom: -14%; opacity: 0; transform: translateY(30%) scale(0.7); transition: opacity 0.4s, transform 0.5s cubic-bezier(0.34, 1.5, 0.64, 1); }
+.blanket.painted img { width: 100%; height: auto; display: block; }
+.sg.tucked .blanket.painted, .crib-ghost.tucked .blanket.painted { height: auto; opacity: 1; transform: none; }
+.falling-star.painted { width: clamp(56px, 6vw, 92px); text-shadow: none; filter: drop-shadow(0 0 14px #ffe7a0) drop-shadow(0 0 34px rgba(255, 200, 115, 0.6)); }
+.falling-star.painted img { width: 100%; height: auto; display: block; pointer-events: none; }
+.crib-mobile.painted { width: min(260px, 50vw); height: auto; }
+.cm-art { padding: 0; border: 0; background: none; cursor: pointer; width: 100%; transform-origin: 50% 0; }
+.cm-art img { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 18px rgba(255, 220, 150, 0.55)); }
+.cm-art.spin { animation: swing 1.2s ease-out; }

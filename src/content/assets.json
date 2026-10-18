@@ -605,8 +605,167 @@
    512
   ]
  },
+ "teddy-climb-a": {
+  "w": 480,
+  "h": 546,
+  "sizes": [
+   256
+  ]
+ },
+ "teddy-climb-b": {
+  "w": 450,
+  "h": 541,
+  "sizes": [
+   256
+  ]
+ },
+ "teddy-parachute": {
+  "w": 521,
+  "h": 662,
+  "sizes": [
+   256
+  ]
+ },
+ "teddy-rocket": {
+  "w": 518,
+  "h": 591,
+  "sizes": [
+   256
+  ]
+ },
+ "bath-boat": {
+  "w": 540,
+  "h": 462,
+  "sizes": [
+   256
+  ]
+ },
+ "bath-fish-a": {
+  "w": 436,
+  "h": 300,
+  "sizes": [
+   256
+  ]
+ },
+ "bath-fish-b": {
+  "w": 480,
+  "h": 309,
+  "sizes": [
+   256
+  ]
+ },
+ "bath-soap": {
+  "w": 515,
+  "h": 337,
+  "sizes": [
+   256
+  ]
+ },
+ "bath-sponge": {
+  "w": 475,
+  "h": 318,
+  "sizes": [
+   256
+  ]
+ },
+ "bath-bubbles": {
+  "w": 438,
+  "h": 395,
+  "sizes": [
+   256
+  ]
+ },
+ "blanket-pink": {
+  "w": 394,
+  "h": 339,
+  "sizes": [
+   256
+  ]
+ },
+ "blanket-lavender": {
+  "w": 380,
+  "h": 358,
+  "sizes": [
+   256
+  ]
+ },
+ "blanket-gold": {
+  "w": 388,
+  "h": 359,
+  "sizes": [
+   256
+  ]
+ },
+ "blanket-mint": {
+  "w": 395,
+  "h": 370,
+  "sizes": [
+   256
+  ]
+ },
+ "wish-star": {
+  "w": 308,
+  "h": 324,
+  "sizes": [
+   256
+  ]
+ },
+ "dream-orb-a": {
+  "w": 284,
+  "h": 288,
+  "sizes": [
+   256
+  ]
+ },
+ "dream-orb-b": {
+  "w": 287,
+  "h": 288,
+  "sizes": [
+   256
+  ]
+ },
+ "dream-orb-c": {
+  "w": 280,
+  "h": 284,
+  "sizes": [
+   256
+  ]
+ },
+ "crib-note": {
+  "w": 324,
+  "h": 277,
+  "sizes": [
+   256
+  ]
+ },
+ "crib-mobile": {
+  "w": 1151,
+  "h": 1184,
+  "sizes": [
+   512
+  ]
+ },
+ "wish-jar": {
+  "w": 904,
+  "h": 1028,
+  "sizes": [
+   384
+  ]
+ },
  "kitten-strip": {
   "w": 1157,
+  "h": 96,
+  "frames": 10,
+  "sizes": []
+ },
+ "bunny-strip": {
+  "w": 1454,
+  "h": 96,
+  "frames": 10,
+  "sizes": []
+ },
+ "bat-strip": {
+  "w": 1591,
   "h": 96,
   "frames": 10,
   "sizes": []

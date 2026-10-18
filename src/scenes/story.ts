@@ -4,6 +4,18 @@ import { voice } from '../core/voice';
 import { store } from '../core/store';
 import { announce, isTouch, reducedMotion } from '../core/a11y';
 import { sparkleBurst } from './hero';
+import { url } from '../core/assets';
+
+/** Swap the CSS quilts for Anushka's painted blankets (O20) when they exist. */
+export function paintBlankets(root: ParentNode): void {
+  const art = ['blanket-pink', 'blanket-lavender', 'blanket-gold', 'blanket-mint'];
+  root.querySelectorAll<HTMLElement>('.blanket').forEach((b, i) => {
+    const src = url(art[i % art.length], 256);
+    if (!src) return;
+    b.classList.add('painted');
+    b.innerHTML = `<img src="${src}" alt="" draggable="false">`;
+  });
+}
 
 /**
  * Pip's story, told by the scroll. Each beat gets a progress value p (0 → 1) from its own
@@ -162,6 +174,8 @@ const WISHES = [
 function beat3(beat: HTMLElement): (p: number) => void {
   const img = beat.querySelector<HTMLImageElement>('.paint img')!;
   const star = beat.querySelector<HTMLButtonElement>('.falling-star')!;
+  const starArt = url('wish-star', 256);
+  if (starArt) { star.innerHTML = `<img src="${starArt}" alt="" draggable="false">`; star.classList.add('painted'); }
   const trail = [...beat.querySelectorAll<HTMLElement>('.star-trail i')];
   const glow = beat.querySelector<HTMLElement>('.cradle-glow')!;
   const cradle = beat.querySelector<HTMLButtonElement>('.cradle-pip')!;
@@ -221,6 +235,7 @@ function beat3(beat: HTMLElement): (p: number) => void {
 
 /* ---------- Beat 4: tuck them in ---------- */
 function beat4(beat: HTMLElement): (p: number) => void {
+  paintBlankets(beat);
   const ghosts = [...beat.querySelectorAll<HTMLButtonElement>('.sg')];
   const text = beat.querySelector<HTMLElement>('.ch4-text')!;
   const hint = beat.querySelector<HTMLElement>('.tuck-hint')!;

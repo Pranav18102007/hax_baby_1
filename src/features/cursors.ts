@@ -38,10 +38,15 @@ const feature: Feature = {
   init() {
     if (isTouch()) return;
     const root = document.documentElement;
-    const compiled = new Map(Object.entries(CURSORS).map(([k, c]) => [k, `${svg(c.body)} ${c.hx} ${c.hy}, auto`]));
+    // C01 pixel cursors (public/cursors/c1..c9.png, tip at ~3,2) by scene; the SVG drawings stay as the fallback
+    const PIXEL: Record<string, number> = { hero: 1, about: 2, story: 3, dome: 3, lab: 4, nightlights: 5, toys: 6, route: 7, guestbook: 8, dawn: 9 };
+    const compiled = new Map<string, string>(Object.keys(PIXEL).map((k) => {
+      const c = CURSORS[k] ?? CURSORS.dome;
+      return [k, `url("/cursors/c${PIXEL[k]}.png") 3 2, ${svg(c.body)} ${c.hx} ${c.hy}, auto`];
+    }));
     const apply = () => {
       const s = store.get('chaos.active') ? '' : store.get('section.current');
-      const c = s === 'nightlights' ? '' : compiled.get(s) ?? '';
+      const c = compiled.get(s) ?? '';
       if (c) root.style.setProperty('--cur', c); else root.style.removeProperty('--cur');
     };
     store.on('section.current', apply);

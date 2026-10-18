@@ -173,24 +173,52 @@ sheets = [
                  "icon-nightmare", "icon-settings", "icon-daynight", "icon-monitor", "icon-unicorn", "icon-portal"], (128,)),
     ("O15", 2, ["bin-closed", "bin-open"], (384,)),
     ("O16", 6, ["sticker-wave", "sticker-asleep", "sticker-lantern", "sticker-kitten", "sticker-duck", "sticker-unicorn"], (512,)),
+    # round 2 (18 Oct)
+    ("T01", 4, ["teddy-climb-a", "teddy-climb-b", "teddy-parachute", "teddy-rocket"], (256,)),
+    ("O19", 6, ["bath-boat", "bath-fish-a", "bath-fish-b", "bath-soap", "bath-sponge", "bath-bubbles"], (256,)),
+    ("O20", 9, ["blanket-pink", "blanket-lavender", "blanket-gold", "blanket-mint", "wish-star",
+                "dream-orb-a", "dream-orb-b", "dream-orb-c", "crib-note"], (256,)),
 ]
+MERGE = {"O20": 1}  # sheets whose objects sit close together
 for pre, n, names, sizes in sheets:
     print(" sheet", pre)
-    parts = slice_sheet(raw(pre).convert("RGBA"), n)
+    parts = slice_sheet(raw(pre).convert("RGBA"), n, merge=MERGE.get(pre, 2))
     for img, name in zip(parts, names):
         save(img, name, sizes)
 
-print(" kitten sprite")
-frames = slice_sheet(raw("O10").convert("RGBA"), 10)
-# keep every frame on one shared canvas so the animation doesn't jitter
-fw = max(f.width for f in frames); fh = max(f.height for f in frames)
-strip = Image.new("RGBA", (fw * len(frames), fh), (0, 0, 0, 0))
-for i, f in enumerate(frames):
-    strip.paste(f, (i * fw + (fw - f.width) // 2, fh - f.height))
-scale = 96 / fh
-strip = strip.resize((round(strip.width * scale), 96), Image.LANCZOS)
-strip.save(OUT / "kitten-strip.webp", "WEBP", quality=85, method=4)
-manifest["kitten-strip"] = {"w": strip.width, "h": strip.height, "frames": len(frames), "sizes": []}
+save(trim(raw("O17").convert("RGBA")), "crib-mobile", (512,))
+save(trim(raw("O18").convert("RGBA")), "wish-jar", (384,))
+
+
+def pet_strip(pre: str, name: str, merge: int = 2) -> None:
+    """10 frames (idle 2, move 4, sleep 2, happy 2) on one shared canvas so the animation doesn't jitter."""
+    print(" pet sprite", name)
+    frames = slice_sheet(raw(pre).convert("RGBA"), 10, merge=merge)
+    fw = max(f.width for f in frames); fh = max(f.height for f in frames)
+    strip = Image.new("RGBA", (fw * len(frames), fh), (0, 0, 0, 0))
+    for i, f in enumerate(frames):
+        strip.paste(f, (i * fw + (fw - f.width) // 2, fh - f.height))
+    scale = 96 / fh
+    strip = strip.resize((round(strip.width * scale), 96), Image.LANCZOS)
+    strip.save(OUT / f"{name}.webp", "WEBP", quality=85, method=4)
+    manifest[name] = {"w": strip.width, "h": strip.height, "frames": len(frames), "sizes": []}
+
+
+pet_strip("O10", "kitten-strip")
+pet_strip("O21", "bunny-strip")
+pet_strip("O22", "bat-strip", merge=1)
+
+print(" cursors")
+# C01: nine pixel cursors, tip in the top-left of each -> public/cursors/c1..c9.png at 32 px (hotspot ~1,1)
+CUR = ROOT / "public" / "cursors"
+CUR.mkdir(parents=True, exist_ok=True)
+for i, c in enumerate(slice_sheet(raw("C01").convert("RGBA"), 9, merge=3), start=1):
+    c = trim(c, margin=0)
+    s = 32 / max(c.size)
+    c = c.resize((max(1, round(c.width * s)), max(1, round(c.height * s))), Image.BOX)
+    canvas = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    canvas.paste(c, (0, 0))
+    canvas.save(CUR / f"c{i}.png", optimize=True)
 
 (ROOT / "src" / "content").mkdir(parents=True, exist_ok=True)
 (ROOT / "src" / "content" / "assets.json").write_text(json.dumps(manifest, indent=1))

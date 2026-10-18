@@ -4,6 +4,7 @@ import { url } from '../core/assets';
 import { announce, reducedMotion } from '../core/a11y';
 import { musicBoxNote, semitoneFreq } from '../core/music';
 import { sparkleBurst } from '../scenes/hero';
+import { paintBlankets } from '../scenes/story';
 
 /**
  * Extra things to do in the Secret Crib: a musical mobile, ghosts to tuck in, a wish jar,
@@ -42,6 +43,16 @@ export function decorateCrib(el: HTMLElement): () => void {
   mob.className = 'crib-mobile';
   mob.innerHTML = `<span class="cm-ring" aria-hidden="true"></span>${CHARMS.map((c, i) =>
     `<button type="button" class="cm-charm c${i}" aria-label="Ring the ${c.label}" style="--i:${i}"><span class="cm-thread"></span><span class="cm-g">${c.g}</span></button>`).join('')}`;
+  const mobArt = art('crib-mobile', 512);
+  if (mobArt) {
+    mob.classList.add('painted');
+    mob.innerHTML = `<button type="button" class="cm-art" aria-label="Spin the musical mobile"><img src="${mobArt}" alt=""></button>`;
+    const b = mob.querySelector<HTMLButtonElement>('.cm-art')!;
+    b.addEventListener('click', () => {
+      CHARMS.forEach((c, i) => musicBoxNote(semitoneFreq(c.note), (audio.ctx?.currentTime ?? 0) + 0.05 + i * 0.22, undefined, 0.24));
+      b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin');
+    });
+  }
   el.appendChild(mob);
   mob.querySelectorAll<HTMLButtonElement>('.cm-charm').forEach((b, i) => b.addEventListener('click', () => {
     musicBoxNote(semitoneFreq(CHARMS[i].note), undefined, undefined, 0.26);
@@ -55,6 +66,7 @@ export function decorateCrib(el: HTMLElement): () => void {
     g.tabIndex = 0;
     g.setAttribute('aria-label', 'Tuck in a sleepy ghost');
     g.insertAdjacentHTML('beforeend', `<span class="blanket b${i + 1}" aria-hidden="true"></span><span class="sg-z" aria-hidden="true">z</span>`);
+    paintBlankets(g);
     g.addEventListener('click', () => {
       if (tucked.has(g)) return;
       tucked.add(g);
