@@ -33,7 +33,11 @@ function build(): void {
       .fromTo('.dome-paint img', { scale: 1 }, { scale: 4.2, ease: 'power2.in', duration: 1 }, 0)
       .fromTo('.dome-title', { scale: 0.85, opacity: 0.75 }, { scale: 1.15, opacity: 1, duration: 0.45, ease: 'power1.out' }, 0)
       .to('.dome-title', { scale: 2.4, opacity: 0, duration: 0.4, ease: 'power2.in' }, 0.6)
-      .to('.dome-flash', { opacity: 1, duration: 0.2 }, 0.8);
+      // a full-screen starlight wash that blooms and clears, instead of a lingering yellow disc
+      .fromTo('.dome-flash', { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1.4, duration: 0.16, ease: 'power2.in' }, 0.72)
+      .to('.dome-flash', { opacity: 0, duration: 0.12, ease: 'power1.out' }, 0.88)
+      .fromTo('.dome-sparks i', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.12, stagger: 0.008 }, 0.7)
+      .to('.dome-sparks i', { x: (i: number) => Math.cos(i * 2.4) * window.innerWidth * 0.6, y: (i: number) => Math.sin(i * 2.4) * window.innerHeight * 0.6, opacity: 0, duration: 0.3, ease: 'power2.out' }, 0.8);
 
     // Story paintings drift slowly (parallax)
     gsap.utils.toArray<HTMLElement>('.beat .paint, .room .paint').forEach((p) => {

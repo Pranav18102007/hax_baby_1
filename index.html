@@ -107,7 +107,7 @@
 
         <div class="growth">
           <img class="growth-wall" data-img="growth-wall" data-sizes="(max-width: 767px) 90vw, 380px" alt="">
-          <h3 class="growth-title">Pip's growth chart <button class="os-button file-btn" type="button" data-open="case-growth">📄 Project file</button></h3>
+          <h3 class="growth-title">Pip's growth chart <button class="os-button file-btn" type="button" data-open="case-growth">📄 Pip's report card</button></h3>
           <ul class="growth-marks">
             <li style="--h: 12%"><button type="button" class="mark" data-tip="Beginner. Working on it. Zzz.">Staying awake</button></li>
             <li style="--h: 52%"><button type="button" class="mark" data-tip="312 flight hours. Only crashed into the moon once.">Dream delivery</button></li>
@@ -158,6 +158,7 @@
         <button class="cradle-pip btn-reset" type="button" aria-label="Say hello to baby Pip">
           <img class="cp-asleep" data-img="pip-asleep" data-sizes="20vw" alt="">
           <img class="cp-awake" data-img="pip-happy" data-sizes="20vw" alt="">
+          <span class="eye eye-l" aria-hidden="true"><i></i></span><span class="eye eye-r" aria-hidden="true"><i></i></span>
         </button>
         <div class="parchment">
           <p class="chapter" id="ch3">Chapter 3 · Plip!</p>
@@ -189,6 +190,7 @@
     <section id="dome" class="scene dome" data-section="dome" aria-label="Into Pip's workshop">
       <div class="paint dome-paint"><img data-img="dome" data-sizes="(max-width: 767px) 120vw, 100vw" alt="Looking up into a painted dome with a round window to the stars"></div>
       <h2 class="wordart dome-title">Pip's Workshop</h2>
+      <div class="dome-sparks" aria-hidden="true"><i>✦</i><i>★</i><i>✧</i><i>✦</i><i>★</i><i>✧</i><i>✦</i><i>★</i><i>✧</i><i>✦</i><i>★</i><i>✧</i><i>✦</i><i>★</i><i>✧</i><i>✦</i><i>★</i><i>✧</i></div>
       <div class="dome-flash" aria-hidden="true"></div>
     </section>
 
@@ -202,7 +204,7 @@
         </button>
         <div class="room-plate">
           <p>Wind the music box and it hums a lullaby nobody has heard before. Turn the knobs until it sounds like sleep.</p>
-          <span class="plate-row"><button class="os-button" type="button" data-open="lullaby-lab">▶ Open Lullaby Lab.exe</button><button class="os-button file-btn" type="button" data-open="case-lab">📄 Project file</button></span>
+          <span class="plate-row"><button class="os-button" type="button" data-open="lullaby-lab">▶ Open Lullaby Lab.exe</button><button class="os-button file-btn" type="button" data-open="case-lab">📄 How Pip made it</button></span>
         </div>
       </article>
 
@@ -225,7 +227,7 @@
           <p>Six lamps for six kinds of scared. Bring your light close to find them. <span class="lamp-count" aria-live="polite">0 / 6 found</span></p>
           <div class="plate-row">
             <button class="os-button" type="button" data-open="nightlights">▶ Open Nightlights.exe</button>
-              <button class="os-button file-btn" type="button" data-open="case-nightlights">📄 Project file</button>
+              <button class="os-button file-btn" type="button" data-open="case-nightlights">📄 How Pip made it</button>
             <button class="os-button light-all" type="button">Light everything</button>
           </div>
         </div>
@@ -239,7 +241,7 @@
         </button>
         <div class="room-plate">
           <p>Rattles and blocks Pip invented between naps. Stack them, throw them, make some noise.</p>
-          <span class="plate-row"><button class="os-button" type="button" data-open="toybox">▶ Open Toy Box.exe</button><button class="os-button file-btn" type="button" data-open="case-toys">📄 Project file</button></span>
+          <span class="plate-row"><button class="os-button" type="button" data-open="toybox">▶ Open Toy Box.exe</button><button class="os-button file-btn" type="button" data-open="case-toys">📄 How Pip made it</button></span>
         </div>
       </article>
     </section>
@@ -260,7 +262,7 @@
         <li style="--x: 68%; --y: 40%"><button type="button" class="stop" data-dream="A dream about being very, very tall">4</button></li>
         <li style="--x: 84%; --y: 58%"><button type="button" class="stop" data-dream="A dream of a warm bath with a hundred ducks">5</button></li>
       </ol>
-      <p class="route-count room-plate"><span>Dreams delivered tonight: <b class="tonight">0</b></span><span class="alltime" hidden>…and <b class="alltime-n">0</b> dreams delivered all-time</span><button class="os-button file-btn" type="button" data-open="case-route">📄 Project file</button></p>
+      <p class="route-count room-plate"><span>Dreams delivered tonight: <b class="tonight">0</b></span><span class="alltime" hidden>…and <b class="alltime-n">0</b> dreams delivered all-time</span><button class="os-button file-btn" type="button" data-open="case-route">📄 How Pip made it</button></p>
     </section>
 
     <!-- S7 · Guestbook + Pinboard -->
@@ -288,7 +290,10 @@
         <a class="ad ad-stick" href="/goodies/pip-sticker-sheet.png" download="pip-sticker-sheet.png">
           <span class="ad-blink">NEW!</span><span class="ad-main">Print your own Pip stickers</span><span class="ad-small">totally free · no catch · the ghosts promise</span>
         </a>
-        <p class="ad-more">More wallpapers: <a href="/goodies/pip-wallpaper-day.jpg" download>day</a> · <a href="/goodies/pip-wallpaper-dawn.jpg" download>dawn</a></p>
+        <div class="ad ad-more">
+          <span class="ad-blink">BONUS!</span><span class="ad-main">Two more wallpapers</span>
+          <span class="ad-small"><a href="/goodies/pip-wallpaper-day.jpg" download>☀ daytime Pip</a> · <a href="/goodies/pip-wallpaper-dawn.jpg" download>🌅 sleepy dawn</a></span>
+        </div>
       </div>
     </section>
 
@@ -296,7 +301,9 @@
     <section id="dawn" class="scene dawn" data-section="dawn" aria-label="Dawn">
       <div class="paint"><img data-img="dawn" alt="Pip's town at sunrise, every window dark and every ghost asleep"></div>
       <button class="dawn-pip btn-reset" type="button" aria-label="Sleeping Pip">
-        <img data-img="pip-asleep" data-sizes="(max-width: 767px) 60vw, 320px" alt="">
+        <img class="dp-asleep" data-img="pip-asleep" data-sizes="(max-width: 767px) 60vw, 320px" alt="">
+        <span class="dp-face dp-awake"><img data-img="pip-surprised" data-sizes="(max-width: 767px) 50vw, 260px" alt=""><span class="eye eye-l" aria-hidden="true"><i></i></span><span class="eye eye-r" aria-hidden="true"><i></i></span></span>
+        <span class="dp-face dp-sleepy"><img data-img="pip-sleepy" data-sizes="(max-width: 767px) 50vw, 260px" alt=""><span class="eye eye-l" aria-hidden="true"><i></i></span><span class="eye eye-r" aria-hidden="true"><i></i></span></span>
         <span class="zzz" aria-hidden="true">z z Z</span>
       </button>
       <p class="parchment dawn-text">Shh… every dream is delivered. See you tomorrow night.</p>
@@ -308,11 +315,12 @@
 
     <footer class="site-footer">
       <div class="footer-counter">Dreams delivered <span class="odometer" aria-live="off">001,204</span></div>
-      <nav class="webring" aria-label="Pip's Webring">
-        <a href="https://hax.baby/first-website" target="_blank" rel="noopener">← prev</a>
+      <nav class="webring" aria-label="Pip's Webring: links to the haX.baby hackathon">
+        <a href="https://hax.baby/first-website" target="_blank" rel="noopener">← the hackathon</a>
         <span>✦ Pip's Webring ✦</span>
-        <a href="https://hax.baby/baby-problem" target="_blank" rel="noopener">next →</a>
+        <a href="https://hax.baby/baby-problem" target="_blank" rel="noopener">meet the other babies →</a>
       </nav>
+      <p class="webring-note">A webring is how 90s websites held hands: hop to the next site in the ring.</p>
       <p>Made in 48 hours by Anushka Bhalekar and Pranav Shinde for haX.baby's <em>Baby's First Website</em> · <a href="https://github.com/Pranav18102007/hax_baby_1">source on GitHub</a></p>
       <details class="credits">
         <summary>Credits</summary>

@@ -1,4 +1,5 @@
 import { audio } from '../core/audio';
+import { store } from '../core/store';
 import { voice } from '../core/voice';
 import { url } from '../core/assets';
 import { announce, reducedMotion } from '../core/a11y';
@@ -138,81 +139,178 @@ export function decorateCrib(el: HTMLElement): () => void {
   return () => cleanups.forEach((c) => c());
 }
 
-/** 30 seconds: dream orbs drift down, catch them with a cloud. Nightmares cost a point. Mouse, finger or arrow keys. */
+/**
+ * Catch the Falling Dreams: Pip flies along the bottom catching dream orbs.
+ * Golden wish stars are worth 5, catches in a row build a combo (x2, x3), nightmares cost a heart.
+ * 45 seconds, 3 hearts, it speeds up as you go, and your best score is remembered.
+ * Mouse, finger or arrow keys.
+ */
+const BEST_KEY = 'pip.dreamgame.best';
+const RANKS: [number, string][] = [[0, 'Dream Rookie'], [12, 'Night Courier'], [28, 'Star Catcher'], [50, 'Moon’s Favourite']];
+const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+
 function startGame(crib: HTMLElement): () => void {
   const g = document.createElement('div');
   g.className = 'dream-game';
   g.setAttribute('role', 'application');
-  g.setAttribute('aria-label', 'Catch the Falling Dreams. Move the cloud with the arrow keys or your pointer.');
+  g.setAttribute('aria-label', 'Catch the Falling Dreams. Move Pip with the arrow keys or your pointer.');
   g.tabIndex = 0;
-  g.innerHTML = `<div class="dg-hud"><span>Dreams caught: <b class="dg-score">0</b></span><span class="dg-time">30</span><button type="button" class="os-button" data-quit>✕ Stop</button></div>
-    <div class="dg-field"><div class="dg-cloud" aria-hidden="true">☁</div></div>`;
+  const best = (() => { try { return Number(localStorage.getItem(BEST_KEY)) || 0; } catch { return 0; } })();
+  g.innerHTML = `
+    <div class="dg-hud">
+      <span class="dg-hearts" aria-label="3 hearts left">♥♥♥</span>
+      <span>Dreams: <b class="dg-score">0</b> <i class="dg-combo" hidden></i></span>
+      <span class="dg-time">45</span>
+      <button type="button" class="os-button" data-quit>✕ Stop</button>
+    </div>
+    <div class="dg-field">
+      <div class="dg-stars"></div>
+      <img class="dg-pip" src="${url('pip-flying', 256)}" alt="" draggable="false">
+      <div class="dg-intro">
+        <p class="wordart">Catch the Falling Dreams</p>
+        <ul><li><img src="${url('dream-orb-a', 64)}" alt=""> dream = 1</li><li><img src="${url('wish-star', 64)}" alt=""> wish star = 5</li><li><img src="${url('blob-grump', 64)}" alt=""> nightmare = ouch!</li></ul>
+        <p>Catch in a row for a combo. ${best ? `Best so far: <b>${best}</b>` : 'Move with your mouse, finger or ← →.'}</p>
+        <p class="dg-count">3</p>
+      </div>
+    </div>`;
   crib.appendChild(g);
   g.focus();
   const field = g.querySelector<HTMLElement>('.dg-field')!;
-  const cloud = g.querySelector<HTMLElement>('.dg-cloud')!;
+  const pip = g.querySelector<HTMLElement>('.dg-pip')!;
   const scoreEl = g.querySelector<HTMLElement>('.dg-score')!;
+  const comboEl = g.querySelector<HTMLElement>('.dg-combo')!;
   const timeEl = g.querySelector<HTMLElement>('.dg-time')!;
+  const heartsEl = g.querySelector<HTMLElement>('.dg-hearts')!;
   const ORBS = ['dream-orb-a', 'dream-orb-b', 'dream-orb-c'].map((n) => url(n, 128)).filter(Boolean);
-  const GLYPHS = ['☾', '★', '☁', '♪', '♥'];
-  let x = 0.5, score = 0, running = true, last = performance.now(), spawnIn = 0, ends = last + 30_000;
-  const drops: { el: HTMLElement; x: number; y: number; v: number; bad: boolean }[] = [];
+  const BLOBS = ['blob-grump', 'blob-storm', 'blob-tongue'].map((n) => url(n, 128)).filter(Boolean);
+  const STAR = url('wish-star', 128);
+  let x = 0.5, lastX = 0.5, score = 0, combo = 0, hearts = 3, running = false, alive = true;
+  let last = 0, spawnIn = 0, ends = 0, startedAt = 0;
+  type Drop = { el: HTMLElement; x: number; y: number; v: number; kind: 'orb' | 'star' | 'blob'; wob: number };
+  const drops: Drop[] = [];
   const keys = new Set<string>();
 
-  const onMove = (e: PointerEvent) => { const r = field.getBoundingClientRect(); x = Math.min(0.95, Math.max(0.05, (e.clientX - r.left) / r.width)); };
+  const onMove = (e: PointerEvent) => { const r = field.getBoundingClientRect(); x = Math.min(0.94, Math.max(0.06, (e.clientX - r.left) / r.width)); };
   field.addEventListener('pointermove', onMove);
   field.addEventListener('pointerdown', onMove);
   const onKey = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); if (e.type === 'keydown') keys.add(e.key); else keys.delete(e.key); } };
   g.addEventListener('keydown', onKey);
   g.addEventListener('keyup', onKey);
 
+  const pop = (text: string, px: number, cls = '') => {
+    const p = document.createElement('span');
+    p.className = `dg-pop ${cls}`;
+    p.textContent = text;
+    p.style.left = `${px * 100}%`;
+    field.appendChild(p);
+    window.setTimeout(() => p.remove(), 900);
+  };
+  const renderHUD = () => {
+    scoreEl.textContent = String(score);
+    const mult = combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
+    comboEl.hidden = mult === 1;
+    comboEl.textContent = `combo x${mult}`;
+    heartsEl.textContent = '♥'.repeat(hearts) + '♡'.repeat(3 - hearts);
+    heartsEl.setAttribute('aria-label', `${hearts} heart${hearts === 1 ? '' : 's'} left`);
+  };
+
   const end = (quit = false) => {
-    if (!running) return;
+    if (!running && !quit) return;
     running = false;
     drops.forEach((d) => d.el.remove());
-    g.querySelector('.dg-field')!.innerHTML = `<div class="dg-over"><p class="wordart">${score} dream${score === 1 ? '' : 's'}!</p><p>${score >= 15 ? 'Pip is SO impressed. Best dream-catcher in town.' : score >= 8 ? 'Lovely catching! The town will sleep well.' : 'Every dream counts. Try again?'}</p><button type="button" class="os-button" data-again>↻ Play again</button> <button type="button" class="os-button" data-done>Back to the crib</button></div>`;
+    drops.length = 0;
+    if (quit) return;
+    const newBest = score > best;
+    if (newBest) { try { localStorage.setItem(BEST_KEY, String(score)); } catch { /* ignore */ } }
+    const rank = [...RANKS].reverse().find(([min]) => score >= min)![1];
+    field.insertAdjacentHTML('beforeend', `<div class="dg-over">${newBest && score > 0 ? '<p class="dg-best">★ NEW BEST! ★</p>' : ''}<p class="wordart">${score} dream${score === 1 ? '' : 's'}</p><p class="dg-rank">You're a <b>${rank}</b></p><p>${hearts ? 'Time’s up! The town is sleeping soundly.' : 'The nightmares got you this time…'}</p><div class="plate-row"><button type="button" class="os-button" data-again>↻ Play again</button><button type="button" class="os-button" data-done>Back to the crib</button></div></div>`);
     g.querySelector('[data-again]')?.addEventListener('click', () => { g.remove(); startGame(crib); });
     g.querySelector('[data-done]')?.addEventListener('click', () => g.remove());
     (g.querySelector('[data-again]') as HTMLElement | null)?.focus();
-    if (!quit && score > 0) voice.say('V22', g, true);
-    announce(`Game over. You caught ${score} dreams.`);
+    if (score > 0) voice.say('V22', g, true);
+    audio.play(newBest ? 'sparkle' : 'chime');
+    announce(`Game over. ${score} dreams. You're a ${rank}.`);
   };
-  g.querySelector('[data-quit]')!.addEventListener('click', () => { end(true); g.remove(); });
+  g.querySelector('[data-quit]')!.addEventListener('click', () => { end(true); alive = false; g.remove(); });
+
+  const catchIt = (d: Drop) => {
+    const r = field.getBoundingClientRect();
+    if (d.kind === 'blob') {
+      hearts--; combo = 0;
+      audio.play('error');
+      g.classList.remove('hurt'); void g.offsetWidth; g.classList.add('hurt');
+      pop('ouch!', d.x, 'bad');
+      if (hearts <= 0) { renderHUD(); end(); return; }
+    } else {
+      combo++;
+      const mult = combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
+      const pts = (d.kind === 'star' ? 5 : 1) * mult;
+      score += pts;
+      const ctx = audio.ctx;
+      if (ctx && !store.get('sound.muted')) musicBoxNote(semitoneFreq(SCALE[Math.min(SCALE.length - 1, combo % SCALE.length)]), undefined, undefined, 0.22);
+      if (d.kind === 'star') { audio.play('sparkle'); sparkleBurst(r.left + d.x * r.width, r.top + d.y * r.height, 14); }
+      pop(`+${pts}`, d.x, d.kind === 'star' ? 'gold' : '');
+      if (combo === 5 || combo === 10) pop(combo === 5 ? 'combo x2!' : 'combo x3!!', 0.5, 'combo');
+    }
+    renderHUD();
+  };
 
   const frame = (now: number) => {
-    if (!running) return;
+    if (!running || !alive) return;
     const dt = Math.min(50, now - last); last = now;
-    if (keys.has('ArrowLeft')) x = Math.max(0.05, x - dt * 0.0011);
-    if (keys.has('ArrowRight')) x = Math.min(0.95, x + dt * 0.0011);
-    cloud.style.left = `${x * 100}%`;
+    const tElapsed = (now - startedAt) / 1000;
+    const speedUp = 1 + tElapsed / 30; // gets busier as the night goes on
+    if (keys.has('ArrowLeft')) x = Math.max(0.06, x - dt * 0.0012);
+    if (keys.has('ArrowRight')) x = Math.min(0.94, x + dt * 0.0012);
+    pip.style.left = `${x * 100}%`;
+    pip.style.setProperty('--tilt', `${Math.max(-18, Math.min(18, (x - lastX) * 900))}deg`);
+    lastX = x;
     const left = Math.max(0, Math.ceil((ends - now) / 1000));
     timeEl.textContent = String(left);
+    timeEl.classList.toggle('hurry', left <= 10);
     if (left <= 0) { end(); return; }
     spawnIn -= dt;
     if (spawnIn <= 0) {
-      spawnIn = 520 + Math.random() * 380;
-      const bad = Math.random() < 0.18;
+      spawnIn = (620 + Math.random() * 380) / speedUp;
+      const r = Math.random();
+      const kind: Drop['kind'] = r < 0.07 ? 'star' : r < 0.07 + Math.min(0.32, 0.14 + tElapsed / 200) ? 'blob' : 'orb';
       const d = document.createElement('span');
-      d.className = `dg-drop${bad ? ' bad' : ''}`;
-      if (!bad && ORBS.length) d.innerHTML = `<img src="${ORBS[Math.floor(Math.random() * ORBS.length)]}" alt="">`;
-      else d.textContent = bad ? '☁︎' : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      d.className = `dg-drop ${kind}`;
+      const src = kind === 'star' ? STAR : kind === 'blob' ? BLOBS[Math.floor(Math.random() * BLOBS.length)] : ORBS[Math.floor(Math.random() * ORBS.length)];
+      d.innerHTML = src ? `<img src="${src}" alt="" draggable="false">` : (kind === 'blob' ? '☁︎' : '★');
       field.appendChild(d);
-      drops.push({ el: d, x: 0.06 + Math.random() * 0.88, y: -0.08, v: (reducedMotion() ? 0.00012 : 0.00018) + Math.random() * 0.00016, bad });
+      drops.push({ el: d, x: 0.06 + Math.random() * 0.88, y: -0.08, v: ((reducedMotion() ? 0.00011 : 0.00016) + Math.random() * 0.00012) * speedUp * (kind === 'star' ? 1.25 : 1), kind, wob: Math.random() * 6 });
     }
     for (let i = drops.length - 1; i >= 0; i--) {
       const d = drops[i];
       d.y += d.v * dt;
-      d.el.style.left = `${d.x * 100}%`;
+      const wx = d.kind === 'blob' ? Math.sin(now / 300 + d.wob) * 0.015 : 0;
+      d.el.style.left = `${(d.x + wx) * 100}%`;
       d.el.style.top = `${d.y * 100}%`;
-      if (d.y > 0.84 && d.y < 0.95 && Math.abs(d.x - x) < 0.09) {
-        score = Math.max(0, score + (d.bad ? -1 : 1));
-        scoreEl.textContent = String(score);
-        audio.play(d.bad ? 'error' : 'chirp');
+      if (d.y > 0.8 && d.y < 0.93 && Math.abs(d.x + wx - x) < 0.085) {
+        catchIt(d);
         d.el.remove(); drops.splice(i, 1);
-      } else if (d.y > 1.05) { d.el.remove(); drops.splice(i, 1); }
+        if (!running) return;
+      } else if (d.y > 1.04) {
+        if (d.kind !== 'blob' && combo) { combo = 0; renderHUD(); }
+        d.el.remove(); drops.splice(i, 1);
+      }
     }
     requestAnimationFrame(frame);
   };
-  requestAnimationFrame(frame);
-  return () => { running = false; g.remove(); };
+
+  // 3… 2… 1… go
+  const count = g.querySelector<HTMLElement>('.dg-count')!;
+  let n = 3;
+  const tick = () => {
+    if (!alive) return;
+    if (n > 0) { count.textContent = String(n); audio.play('beep'); n--; window.setTimeout(tick, reducedMotion() ? 300 : 700); return; }
+    g.querySelector('.dg-intro')?.remove();
+    audio.play('startup');
+    running = true; last = performance.now(); startedAt = last; ends = last + 45_000;
+    renderHUD();
+    requestAnimationFrame(frame);
+  };
+  window.setTimeout(tick, 900);
+  return () => { alive = false; running = false; g.remove(); };
 }

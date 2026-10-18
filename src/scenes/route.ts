@@ -47,6 +47,19 @@ export function initRoute(lightStop: (b: HTMLButtonElement) => void): void {
   flyer.setAttribute('aria-hidden', 'true');
   route.appendChild(flyer);
 
+  const sky = document.createElement('div');
+  sky.className = 'route-sky';
+  sky.setAttribute('aria-hidden', 'true');
+  sky.innerHTML = `<div class="route-twinkles"></div><span class="shoot s1"></span><span class="shoot s2"></span>
+    <img class="route-cloud rc1" src="${url('hero-clouds', 900)}" alt=""><img class="route-cloud rc2" src="${url('hero-clouds', 900)}" alt="">
+    <img class="route-moon" src="${url('dream-orb-b', 128) || ''}" alt="">`;
+  route.querySelector('.paint')!.after(sky);
+  const trail = document.createElement('div');
+  trail.className = 'route-trail';
+  trail.setAttribute('aria-hidden', 'true');
+  route.appendChild(trail);
+  let lastSpark = 0;
+
   // The path is built in real pixels (so the draw-on dash works) and rebuilt on resize.
   let len = 1;
   let stopAt: number[] = [];
@@ -81,6 +94,17 @@ export function initRoute(lightStop: (b: HTMLButtonElement) => void): void {
     flyer.style.left = `${p.x}px`;
     flyer.style.top = `${p.y}px`;
     flyer.style.setProperty('--tilt', `${Math.max(-25, Math.min(25, Math.atan2(ahead.y - p.y, ahead.x - p.x) * 57))}deg`);
+    // sparkle dust behind Pip while flying
+    const now = performance.now();
+    if (!reducedMotion() && t > 0.01 && t < 0.99 && now - lastSpark > 60) {
+      lastSpark = now;
+      const s = document.createElement('i');
+      s.textContent = Math.random() < 0.5 ? '✦' : '·';
+      s.style.left = `${p.x - 30 + Math.random() * 16}px`;
+      s.style.top = `${p.y + Math.random() * 16}px`;
+      trail.appendChild(s);
+      window.setTimeout(() => s.remove(), 1100);
+    }
     stopAt.forEach((at, i) => { if (t >= at - 0.01 && !stops[i].classList.contains('done')) lightStop(stops[i]); });
   };
   new ResizeObserver(build).observe(route);

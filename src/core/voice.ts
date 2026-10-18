@@ -105,7 +105,12 @@ function bubble(text: string, anchor?: Element | null): void {
   el.classList.remove('show');
   const rect = anchor && (anchor as HTMLElement).getBoundingClientRect();
   const visible = rect && rect.bottom > 60 && rect.top < window.innerHeight - 80 && rect.width > 0;
-  if (visible) {
+  if (visible && rect.left + rect.width / 2 > window.innerWidth * 0.7) {
+    // things on the right edge (the teddy on the ladder, the bin) talk to the left
+    el.style.left = `${Math.max(rect.left - 10, 200)}px`;
+    el.style.top = `${Math.max(rect.top + rect.height * 0.2, 70)}px`;
+    el.dataset.dock = 'left';
+  } else if (visible) {
     const x = Math.min(Math.max(rect.left + rect.width * 0.6, 16), window.innerWidth - 16);
     el.style.left = `${x}px`;
     el.style.top = `${Math.max(rect.top + rect.height * 0.12, 70)}px`;

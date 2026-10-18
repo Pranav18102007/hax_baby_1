@@ -34,15 +34,15 @@ const feature: Feature = {
     store.on('theme.mode', applyTheme);
     bus.on('theme:toggle', () => {
       const next = store.get('theme.mode') === 'day' ? 'night' : 'day';
+      let handled = false;
       const swap = () => {
         store.set('theme.userSet', true);
         store.set('theme.mode', next);
         announce(next === 'night' ? 'Night mode on' : 'Day mode on');
-        if (next === 'night') voice.say('V10', null, true);
-        else voice.giggle();
+        // after Bath Time, let "splish splash" finish before Pip yawns or giggles
+        window.setTimeout(() => { if (next === 'night') voice.say('V10', null, true); else voice.giggle(); }, handled ? 2100 : 0);
       };
       // A transition feature (Bath Time) can take over by listening for this and calling swap() mid-way.
-      let handled = false;
       bus.emit('theme:transition', { next, swap, claim: () => { handled = true; } });
       if (!handled) { audio.play('sparkle'); swap(); }
     });

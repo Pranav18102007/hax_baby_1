@@ -172,7 +172,16 @@ function mount(body: HTMLElement): () => void {
   };
 
   $('[data-wind]').addEventListener('click', () => { wind(0.25); if (!playing) start(false); });
-  playBtn.addEventListener('click', () => (playing ? stop() : start(spring <= 0)));
+  playBtn.addEventListener('click', () => {
+    if (playing) { stop(); return; }
+    if (spring <= 0.02) { // like a real music box: no spring, no song
+      audio.play('error');
+      voice.bubble('Wind me up first! Turn the golden key.', $('.lab-key'));
+      const k = $('.lab-key'); k.classList.remove('nudge'); void k.offsetWidth; k.classList.add('nudge');
+      return;
+    }
+    start(false);
+  });
   $('[data-new]').addEventListener('click', () => {
     seed = Math.floor(Math.random() * 1e6);
     melody = makeMelody(seed, scale);
@@ -226,9 +235,20 @@ function mount(body: HTMLElement): () => void {
     };
     set(k.value);
     el.addEventListener('setvalue', (e) => set((e as CustomEvent<number>).detail));
-    let sy = 0, sv = 0;
-    el.addEventListener('pointerdown', (e) => { el.setPointerCapture(e.pointerId); sy = e.clientY; sv = k.value; });
-    el.addEventListener('pointermove', (e) => { if (el.hasPointerCapture(e.pointerId)) set(sv + ((sy - e.clientY) / 150) * (k.max - k.min)); });
+    // turn it like a real knob: drag around its centre (mouse or finger); 270° of travel = full range
+    let lastA = 0, acc = 0;
+    const angle = (e: PointerEvent) => { const r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)); };
+    el.addEventListener('pointerdown', (e) => { el.setPointerCapture(e.pointerId); lastA = angle(e); acc = k.value; e.preventDefault(); });
+    el.addEventListener('pointermove', (e) => {
+      if (!el.hasPointerCapture(e.pointerId)) return;
+      const a = angle(e);
+      let d = a - lastA;
+      if (d > Math.PI) d -= Math.PI * 2;
+      if (d < -Math.PI) d += Math.PI * 2;
+      lastA = a;
+      acc = Math.min(k.max, Math.max(k.min, acc + (d / (Math.PI * 1.5)) * (k.max - k.min)));
+      set(acc);
+    });
     el.addEventListener('wheel', (e) => { e.preventDefault(); set(k.value - Math.sign(e.deltaY) * k.step); }, { passive: false });
     el.addEventListener('keydown', (e) => {
       const big = (k.max - k.min) / 3;
@@ -295,7 +315,8 @@ function mount(body: HTMLElement): () => void {
       body.querySelector<HTMLInputElement>(`.lab-scales input[value="${scale}"]`)!.checked = true;
       body.querySelector<HTMLElement>('.knob[data-knob="tempo"]')?.dispatchEvent(new CustomEvent('setvalue', { detail: x.tempo }));
       if (playing) stop();
-      start(true);
+      spring = 1; renderSpring(); // a kept lullaby comes fully wound
+      start(false);
     } else if (b.dataset.del) {
       l.splice(Number(b.dataset.del), 1);
       writeSaved(l);

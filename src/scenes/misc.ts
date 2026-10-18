@@ -1,4 +1,6 @@
 import { audio, musicBoxNote } from '../core/audio';
+import { url } from '../core/assets';
+import { initNightlightTricks, lampTrick } from './nightlights-party';
 import { api } from '../core/api';
 import { bus } from '../core/bus';
 import { isTouch, reducedMotion } from '../core/a11y';
@@ -65,8 +67,10 @@ function initLamps(): void {
       audio.play('chirp');
       if (found === 1) voice.say('V05', l, true);
     }
-    if (found === 6) { room?.classList.add('all-lit'); audio.play('sparkle'); voice.say('V29', room, true); }
+    if (found === 6) { room?.classList.add('all-lit'); audio.play('sparkle'); }
+    lampTrick(l, Number(l.dataset.lamp), found, silent);
   };
+  initNightlightTricks();
   document.querySelector('.light-all')?.addEventListener('click', () => lamps.forEach((l) => light(l, true)));
 
   // Flashlight: the lantern light follows the pointer (desktop) or the dragging finger (phone).
@@ -96,6 +100,20 @@ function initRoute(): void {
     tonight++;
     if (out) out.textContent = String(tonight);
     audio.play('chirp');
+    const li = b.parentElement!;
+    const orbs = ['dream-orb-a', 'dream-orb-b', 'dream-orb-c'];
+    const orb = document.createElement('img');
+    orb.className = 'route-orb';
+    orb.src = url(orbs[tonight % 3], 128) || url('ghost-plain', 128);
+    orb.alt = ''; orb.setAttribute('aria-hidden', 'true');
+    li.appendChild(orb);
+    const plus = document.createElement('span');
+    plus.className = 'route-plus'; plus.setAttribute('aria-hidden', 'true'); plus.textContent = '+1 dream';
+    li.appendChild(plus);
+    const ghost = document.createElement('img');
+    ghost.className = 'route-ghost'; ghost.src = url('ghost-yawn', 256); ghost.alt = ''; ghost.setAttribute('aria-hidden', 'true');
+    li.appendChild(ghost);
+    window.setTimeout(() => { orb.remove(); plus.remove(); }, 2600);
   };
   document.querySelectorAll<HTMLButtonElement>('.stop').forEach((b) => {
     b.addEventListener('click', () => { voice.bubble(b.dataset.dream!, b); routeLight(b); });
@@ -118,11 +136,15 @@ function initPinboard(): void {
 
 function initDawn(): void {
   const pipBtn = document.querySelector<HTMLElement>('.dawn-pip');
+  // woken up: grumpy-surprised, then a big yawn and "five more minutes…", then back to sleep
+  let t1 = 0, t2 = 0;
   const wake = () => {
     if (!pipBtn) return;
-    pipBtn.classList.add('awake');
+    window.clearTimeout(t1); window.clearTimeout(t2);
+    pipBtn.dataset.state = 'awake';
     voice.say('V09', pipBtn, true);
-    window.setTimeout(() => pipBtn.classList.remove('awake'), 2000);
+    t1 = window.setTimeout(() => { pipBtn.dataset.state = 'sleepy'; voice.say('V31', pipBtn, true); }, 2200);
+    t2 = window.setTimeout(() => { pipBtn.dataset.state = ''; }, 4600);
   };
   pipBtn?.addEventListener('click', wake);
 

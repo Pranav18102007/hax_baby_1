@@ -106,3 +106,10 @@
 }
 .story.still .beat .paint img { transform: none; }
 @media (prefers-reduced-motion: reduce) { .beat-dust, .beat-notes i { animation: none; } }
+
+/* Chapter 3: baby Pip's happy eye-lights (same sockets as the hero Pip) */
+.cradle-pip .eye { opacity: 0; transition: opacity 0.4s 0.15s; }
+.beat.pip-awake .cradle-pip .eye { opacity: 1; }
+.cradle-pip .eye i { --rx: 0%; --ry: 0%; width: 46%; height: 22%; background: none; border: 2px solid var(--eye, #ffd98a); border-bottom: 0; border-radius: 999px 999px 0 0; box-shadow: 0 -2px 8px var(--eye, #ffd98a); }
+.beat.pip-awake .cradle-pip img.cp-awake { transform: scale(1.05); }
+.cradle-pip .eye { translate: -50% -50%; }
