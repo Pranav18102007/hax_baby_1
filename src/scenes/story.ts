@@ -270,25 +270,53 @@ export function initStoryScroll(): void {
   const dots = [...document.querySelectorAll<HTMLElement>('.story-dots li')];
   const renderers = beats.map((b) => ({ '1': beat1, '2': beat2, '3': beat3, '4': beat4 }[b.dataset.beat!]!(b)));
 
+  const story = document.getElementById('story')!;
+  let lastActive = -1;
+  // stacked chapters are hidden until they dissolve in, so lazy images would never start loading: fetch them early
+  new IntersectionObserver((entries, io) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    story.querySelectorAll<HTMLImageElement>('img[loading="lazy"], img:not([loading])').forEach((im) => { im.loading = 'eager'; });
+    io.disconnect();
+  }, { rootMargin: '150% 0px' }).observe(story);
+  /** One pinned stage: the four chapters are stacked and each dissolves into the next as you scroll (P = 0..1). */
+  const renderStage = (P: number) => {
+    const s = P * beats.length; // 0..4, one unit per chapter
+    let active = 0;
+    beats.forEach((b, i) => {
+      const fadeIn = i === 0 ? 1 : smooth(i - 0.2, i + 0.02, s); // later chapters dissolve in on top
+      const gone = i < beats.length - 1 && s > i + 1.05; // and the one underneath is put away once covered
+      const o = gone ? 0 : fadeIn;
+      b.style.opacity = o.toFixed(3);
+      b.style.visibility = o <= 0.001 ? 'hidden' : 'visible';
+      if (o > 0.6) active = i;
+      renderers[i](clamp((s - i) / 0.92));
+    });
+    beats.forEach((b, i) => { b.inert = i !== active; });
+    if (active !== lastActive) { lastActive = active; dots.forEach((d, j) => d.classList.toggle('on', j === active)); }
+  };
+
   const build = () => {
     triggers.forEach((t) => t.kill());
     triggers = [];
-    document.getElementById('story')!.classList.toggle('still', reducedMotion());
-    if (reducedMotion()) { renderers.forEach((r) => r(1)); return; }
-    const pin = !isTouch() && window.innerWidth >= 900;
-    beats.forEach((b, i) => {
-      triggers.push(ScrollTrigger.create({
-        trigger: b,
-        start: pin ? 'top top' : 'top 75%',
-        end: pin ? '+=95%' : 'top top',
-        pin,
-        anticipatePin: 1,
-        refreshPriority: 10 - i,
-        onUpdate: (self) => renderers[i](self.progress),
-        onRefresh: (self) => renderers[i](self.progress),
-        onToggle: (self) => { if (self.isActive) dots.forEach((d, j) => d.classList.toggle('on', j === i)); },
-      }));
-    });
+    const still = reducedMotion();
+    story.classList.toggle('still', still);
+    story.classList.toggle('stage', !still);
+    if (still) {
+      beats.forEach((b) => { b.style.opacity = ''; b.style.visibility = ''; b.inert = false; });
+      renderers.forEach((r) => r(1));
+      return;
+    }
+    triggers.push(ScrollTrigger.create({
+      trigger: story,
+      start: 'top top',
+      end: () => `+=${window.innerHeight * (isTouch() ? 3.4 : 4.4)}`,
+      pin: true,
+      anticipatePin: 1,
+      refreshPriority: 10,
+      onUpdate: (self) => renderStage(self.progress),
+      onRefresh: (self) => renderStage(self.progress),
+    }));
+    renderStage(0);
     ScrollTrigger.sort();
     ScrollTrigger.refresh();
   };

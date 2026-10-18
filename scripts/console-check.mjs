@@ -119,7 +119,11 @@ for (const s of sizes) {
   // Settings window
   await tap('#start-btn');
   const settings = page.locator('.sm-item', { hasText: 'Settings' });
-  if (await settings.isVisible()) { await settings.click(); await page.waitForTimeout(600); await page.screenshot({ path: `${OUT}/${s.name}-6-settings.png` }); await page.keyboard.press('Escape'); }
+  if (await settings.isVisible()) {
+    const bb = await settings.boundingBox();
+    const who = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e ? `${e.tagName}.${e.className} < ${e.parentElement?.className}` : 'none'; }, [bb.x + bb.width / 2, bb.y + bb.height / 2]);
+    if (!who.includes('sm-item')) console.log('DEBUG covering settings:', who, 'scrollY', await page.evaluate(() => scrollY));
+    await settings.click({ timeout: 5000 }).catch(() => problems.push(`[${s.name}] settings item covered by ${who}`)); await page.waitForTimeout(600); await page.screenshot({ path: `${OUT}/${s.name}-6-settings.png` }); await page.keyboard.press('Escape'); }
 
   // horizontal overflow check
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

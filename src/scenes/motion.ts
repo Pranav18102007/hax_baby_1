@@ -40,7 +40,7 @@ function build(): void {
       .to('.dome-sparks i', { x: (i: number) => Math.cos(i * 2.4) * window.innerWidth * 0.6, y: (i: number) => Math.sin(i * 2.4) * window.innerHeight * 0.6, opacity: 0, duration: 0.3, ease: 'power2.out' }, 0.8);
 
     // Story paintings drift slowly (parallax)
-    gsap.utils.toArray<HTMLElement>('.beat .paint, .room .paint').forEach((p) => {
+    gsap.utils.toArray<HTMLElement>('.room .paint').forEach((p) => {
       gsap.fromTo(p, { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: p.parentElement!, start: 'top bottom', end: 'bottom top', scrub: true } });
     });
   });
