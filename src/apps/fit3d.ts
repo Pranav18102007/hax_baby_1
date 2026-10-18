@@ -4,6 +4,7 @@ import {
   CanvasTexture, SRGBColorSpace, Raycaster, Vector2, Color, Object3D, BufferGeometry, BufferAttribute, LineBasicMaterial,
   Line, Vector3, RepeatWrapping, Material, Texture, CatmullRomCurve3, PMREMGenerator, ACESFilmicToneMapping,
   PCFSoftShadowMap, Sprite, SpriteMaterial, AdditiveBlending, TorusGeometry, type MeshPhysicalMaterialParameters,
+  Points, PointsMaterial, Float32BufferAttribute, DoubleSide,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -119,8 +120,8 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   room.traverse((o) => { const m = o as Mesh; if (m.geometry) m.geometry.dispose(); });
 
   const camera = new PerspectiveCamera(32, 1, 0.1, 50);
-  camera.position.set(0, 1.75, 7.6);
-  camera.lookAt(0, 1.47, 0);
+  camera.position.set(0, 1.7, 8.8);
+  camera.lookAt(0, 1.38, 0);
 
   scene.add(new HemisphereLight('#e6d8ff', PLUM, 0.35));
   const key = new DirectionalLight('#fff0dc', 2.1);
@@ -244,7 +245,83 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   // soft contact shadow under the cloud
   const ground = new Mesh(geo(new PlaneGeometry(8, 8)), new ShadowMaterial({ opacity: 0.32, color: new Color('#120c24') }));
   disposables.push(ground.material as Material);
-  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.42; ground.receiveShadow = true; root.add(ground);
+  ground.visible = false; // the pedestal now catches Pip's shadow
+
+  // ---------- the photo studio set (stays still while Pip spins) ----------
+  const set = new Group(); scene.add(set);
+  // plush round pedestal the cloud sits on
+  const pedestal = prim(geo(new CylinderGeometry(1.5, 1.58, 0.28, 72)), plush('#c9b6e4', { sheenColor: new Color('#fff0fb') }), 0, -0.34, 0);
+  pedestal.receiveShadow = true; set.add(pedestal);
+  const rimTop = prim(geo(new TorusGeometry(1.5, 0.075, 14, 96)), plush(CREAM, { roughness: 1 }), 0, -0.2, 0); rimTop.rotation.x = Math.PI / 2; set.add(rimTop);
+  const rimBot = prim(geo(new TorusGeometry(1.58, 0.06, 12, 96)), vinyl(GOLD, { metalness: 0.9, roughness: 0.3, clearcoat: 0 }), 0, -0.47, 0); rimBot.rotation.x = Math.PI / 2; set.add(rimBot);
+  // soft spotlight beam from above
+  const beamTex = (() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 128; const g = c.getContext('2d')!;
+    const gr = g.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, 'rgba(255,241,214,0.0)'); gr.addColorStop(0.15, 'rgba(255,241,214,0.9)'); gr.addColorStop(1, 'rgba(255,241,214,0.0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 4, 128); return new CanvasTexture(c);
+  })();
+  disposables.push(beamTex);
+  const beam = new Mesh(geo(new CylinderGeometry(0.25, 1.75, 4.6, 48, 1, true)), new MeshBasicMaterial({ map: beamTex, transparent: true, opacity: 0.16, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }));
+  disposables.push(beam.material as Material);
+  beam.position.y = 2.0; set.add(beam);
+  // fairy-light garland across the top
+  const bulbMats = ['#ffb3cf', '#ffe29a', '#bff0dc', '#d6c4ff'].map((c) => { const m = new MeshBasicMaterial({ color: c }); disposables.push(m); return m; });
+  const bulbGeo = geo(new SphereGeometry(0.065, 14, 10));
+  const bulbs: { m: Mesh; halo: Sprite; ph: number }[] = [];
+  for (const [x0, x1, y0, sag, z] of [[-4.2, 0.2, 3.9, 0.55, -1.6], [-0.2, 4.2, 3.9, 0.55, -1.6]] as const) {
+    const pts: Vector3[] = [];
+    for (let i = 0; i <= 24; i++) { const t = i / 24; pts.push(new Vector3(x0 + (x1 - x0) * t, y0 - Math.sin(t * Math.PI) * sag, z)); }
+    const wire = new Line(geo(new BufferGeometry().setFromPoints(pts)), new LineBasicMaterial({ color: '#6b5a8e' }));
+    disposables.push(wire.material as Material); set.add(wire);
+    for (let i = 1; i < 8; i++) {
+      const t = i / 8, k = bulbs.length;
+      const m = new Mesh(bulbGeo, bulbMats[k % 4]);
+      m.position.set(x0 + (x1 - x0) * t, y0 - Math.sin(t * Math.PI) * sag - 0.07, z);
+      const halo = new Sprite(new SpriteMaterial({ map: glowTex, color: (bulbMats[k % 4].color as Color).getHex(), blending: AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }));
+      disposables.push(halo.material); halo.scale.setScalar(0.42); halo.position.copy(m.position);
+      set.add(m, halo); bulbs.push({ m, halo, ph: k * 1.7 });
+    }
+  }
+  // floating gold stars
+  const starGeo = geo(new ExtrudeGeometry(starShape(1), { depth: 0.3, bevelEnabled: true, bevelSize: 0.12, bevelThickness: 0.12, bevelSegments: 3 }));
+  const starMat = vinyl(GOLD, { metalness: 0.6, roughness: 0.3, emissive: new Color('#6b5214'), emissiveIntensity: 0.6 });
+  const stars = ([[-2.4, 2.5, -1.0, 0.16], [2.5, 2.2, -0.9, 0.14], [-2.1, 0.8, -0.5, 0.11], [2.2, 0.55, -0.4, 0.12], [-3.2, 1.6, -1.8, 0.13], [3.3, 3.0, -2.0, 0.15], [0.9, 3.4, -2.4, 0.1]] as const).map(([x, y, z, r], i) => {
+    const m = prim(starGeo, starMat, x, y, z, r); m.castShadow = false; m.userData = { y0: y, ph: i * 1.3 }; set.add(m); return m;
+  });
+  // little clouds drifting at the back
+  const puffMat = plush('#fff8f0', { roughness: 1, sheenColor: new Color('#e9ddff') });
+  const puffBall = geo(new SphereGeometry(1, 24, 18));
+  const clouds = ([[-3.2, 1.0, -2.8], [3.4, 1.7, -3.0], [0.6, 0.0, -3.4]] as const).map(([x, y, z], i) => {
+    const g = new Group(); g.position.set(x, y, z);
+    for (const [px, py, pr] of [[0, 0, 0.32], [-0.32, -0.06, 0.24], [0.33, -0.05, 0.26], [0.1, 0.16, 0.22]]) g.add(prim(puffBall, puffMat, px, py, 0, pr, pr * 0.85, pr));
+    g.userData = { x0: x, ph: i * 2 }; set.add(g); return g;
+  });
+  // crescent moon hanging on a string
+  const moonShape = new Shape();
+  moonShape.absarc(0, 0, 0.32, Math.PI / 2, Math.PI * 1.5, false);
+  moonShape.absarc(0.14, 0, Math.hypot(0.14, 0.32), Math.atan2(-0.32, -0.14), Math.atan2(0.32, -0.14), true);
+  const moon = new Group(); moon.position.set(-2.7, 3.9, -1.3); set.add(moon);
+  const moonMesh = prim(geo(new ExtrudeGeometry(moonShape, { depth: 0.1, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 4 })), vinyl('#fff1c4', { roughness: 0.35, emissive: new Color('#8a7340'), emissiveIntensity: 0.5 }), 0, -1.25, 0);
+  moonMesh.castShadow = false; moon.add(moonMesh);
+  const moonString = new Line(geo(new BufferGeometry().setFromPoints([new Vector3(0, 0.5, 0), new Vector3(0, -0.93, 0.05)])), new LineBasicMaterial({ color: '#d9c8f0' }));
+  disposables.push(moonString.material as Material); moon.add(moonString);
+  // slow sparkle dust
+  const DUST = 70;
+  const dustPos = new Float32Array(DUST * 3);
+  for (let i = 0; i < DUST; i++) { dustPos[i * 3] = (Math.random() - 0.5) * 7; dustPos[i * 3 + 1] = Math.random() * 4.4 - 0.4; dustPos[i * 3 + 2] = -Math.random() * 3 + 0.5; }
+  const dustGeo = geo(new BufferGeometry()); dustGeo.setAttribute('position', new Float32BufferAttribute(dustPos, 3));
+  const dust = new Points(dustGeo, new PointsMaterial({ map: glowTex, size: 0.11, color: '#fff1d6', transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false }));
+  disposables.push(dust.material as Material); set.add(dust);
+  const animateSet = (t: number, dt: number) => {
+    bulbs.forEach((b) => { const k = 0.55 + 0.45 * Math.sin(t * 2.2 + b.ph); (b.halo.material as SpriteMaterial).opacity = 0.35 + 0.55 * k; b.m.scale.setScalar(0.85 + 0.25 * k); });
+    if (opts.still) return;
+    stars.forEach((m) => { m.position.y = m.userData.y0 + Math.sin(t * 1.1 + m.userData.ph) * 0.08; m.rotation.y = Math.sin(t * 0.7 + m.userData.ph) * 0.6; m.rotation.z = Math.sin(t * 0.5 + m.userData.ph) * 0.15; });
+    clouds.forEach((g) => { g.position.x = g.userData.x0 + Math.sin(t * 0.15 + g.userData.ph) * 0.35; });
+    moon.rotation.z = Math.sin(t * 0.8) * 0.06;
+    const a = dustGeo.getAttribute('position') as Float32BufferAttribute;
+    for (let i = 0; i < DUST; i++) { let y = a.getY(i) + dt * 0.12; if (y > 4.1) y = -0.4; a.setY(i, y); a.setX(i, a.getX(i) + Math.sin(t + i) * dt * 0.02); }
+    a.needsUpdate = true;
+  };
 
   // ---- other hats (simple shapes, same materials) ----
   const partyHat = new Group();
@@ -339,7 +416,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
   const resize = (w: number, h: number) => {
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(1, h);
-    camera.position.z = camera.aspect < 0.8 ? 9.4 : 7.6;
+    camera.position.z = camera.aspect < 0.8 ? 11 : 8.8;
     camera.updateProjectionMatrix();
   };
 
@@ -379,6 +456,7 @@ export async function createPipScene(canvas: HTMLCanvasElement, opts: { still: b
     if (ex.userData.spin) (ex.userData.spin as Object3D).rotation.y = t * 2;
     if (ex.userData.float) (ex.userData.float as Object3D).position.x = -0.45 + Math.sin(t * 1.4) * 0.05;
     if (ex.userData.orbit && !opts.still) { ex.position.set(Math.cos(t * 0.9) * 0.95, 1.7 + Math.sin(t * 1.8) * 0.12, Math.sin(t * 0.9) * 0.6); ex.rotation.y = t; }
+    animateSet(t, dt);
     renderer.render(scene, camera);
   };
 

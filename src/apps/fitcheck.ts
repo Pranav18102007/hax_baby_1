@@ -4,6 +4,7 @@ import { audio } from '../core/audio';
 import { voice } from '../core/voice';
 import { reducedMotion, announce } from '../core/a11y';
 import { url } from '../core/assets';
+import { store } from '../core/store';
 
 /**
  * Fit Check.exe: Pip in 3D (Three.js, loaded only when this window opens).
@@ -39,6 +40,8 @@ async function mount(body: HTMLElement): Promise<() => void> {
   }
   body.innerHTML = `
     <div class="fit-stage">
+      <div class="fit-bg" aria-hidden="true"></div>
+      <div class="fit-sign" aria-hidden="true"><span>FIT CHECK</span></div>
       <canvas tabindex="0" role="img" aria-label="Pip in 3D"></canvas>
       <p class="fit-hint" aria-hidden="true">drag to spin · tap Pip</p>
       <p class="fit-loading">Pip is getting dressed…</p>
@@ -113,11 +116,42 @@ async function mount(body: HTMLElement): Promise<() => void> {
     pip.setAuto(on);
     audio.play('click');
   });
+  // the painted nursery behind the studio follows the site's day / night mode
+  const bgName = store.get('theme.mode') === 'day' ? 'nursery-day' : 'nursery-night';
+  const bgSrc = url(bgName, 900);
+  const bgEl = body.querySelector<HTMLElement>('.fit-bg')!;
+  bgEl.style.backgroundImage = `url("${bgSrc}")`;
+  body.querySelector('.fit-stage')!.classList.toggle('day', bgName === 'nursery-day');
+  const bgImg = new Image(); bgImg.src = bgSrc;
+
+  // Snap: the backdrop, Pip and the sign, flattened into one PNG
   body.querySelector('[data-act="snap"]')!.addEventListener('click', () => {
-    const a = document.createElement('a');
-    a.href = pip.snapshot();
-    a.download = 'pip-fit-check.png';
-    a.click();
+    const pipImg = new Image();
+    pipImg.onload = () => {
+      const w = canvas.width, h = canvas.height;
+      const out = document.createElement('canvas'); out.width = w; out.height = h;
+      const g = out.getContext('2d')!;
+      g.fillStyle = '#2b2350'; g.fillRect(0, 0, w, h);
+      if (bgImg.complete && bgImg.naturalWidth) {
+        const s = Math.max(w / bgImg.naturalWidth, h / bgImg.naturalHeight) * 1.06;
+        g.filter = `blur(${Math.round(w / 220)}px) brightness(0.72) saturate(1.1)`;
+        g.drawImage(bgImg, (w - bgImg.naturalWidth * s) / 2, (h - bgImg.naturalHeight * s) / 2, bgImg.naturalWidth * s, bgImg.naturalHeight * s);
+        g.filter = 'none';
+      }
+      const v = g.createRadialGradient(w / 2, h * 0.55, h * 0.2, w / 2, h * 0.55, Math.max(w, h) * 0.75);
+      v.addColorStop(0, 'rgba(30,22,58,0.15)'); v.addColorStop(1, 'rgba(18,12,36,0.75)');
+      g.fillStyle = v; g.fillRect(0, 0, w, h);
+      g.drawImage(pipImg, 0, 0, w, h);
+      const fs = Math.round(h * 0.06);
+      g.font = `${fs}px VT323, monospace`; g.textBaseline = 'top';
+      g.fillStyle = '#ffe9a8'; g.shadowColor = '#f6b5c8'; g.shadowBlur = fs * 0.6;
+      g.fillText('✦ FIT CHECK ✦', fs * 0.7, fs * 0.6);
+      const a = document.createElement('a');
+      a.href = out.toDataURL('image/png');
+      a.download = 'pip-fit-check.png';
+      a.click();
+    };
+    pipImg.src = pip.snapshot();
     audio.play('shutter');
     verdict.textContent = 'Snap! Saved pip-fit-check.png 📸';
   });
