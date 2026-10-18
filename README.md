@@ -62,7 +62,7 @@ The guestbook and counter use Vercel Functions (`/api`) with Upstash Redis. Set 
 - **Team:** Anushka Bhalekar (design, art direction, voice) and Pranav Shinde (build), with guidance from Atharva Baodhankar.
 - **Pip** and the original asset pack: [haX.baby](https://hax.baby/baby-problem) (Track 1 canon).
 - **All other artwork:** generated with ChatGPT image generation from our own prompts and art-directed by Anushka Bhalekar from the official Pip references (backgrounds, props, the teddy, pets, cursors).
-- **Voice of Pip:** every line recorded by Anushka Bhalekar, lightly cleaned up with AI audio editing (ChatGPT), then pitched and levelled in our build script.
+- **Voice of Pip:** every line (and the three sung lullabies on the Mixtape) recorded by Anushka Bhalekar, lightly cleaned up with AI audio editing (ChatGPT), then pitched and levelled in our build script.
 - **Code:** [GSAP](https://gsap.com) (Standard License, free), [Lenis](https://github.com/darkroomengineering/lenis) (MIT), [Matter.js](https://github.com/liabru/matter-js) (MIT), [Upstash](https://upstash.com) SDKs (MIT).
 - **Fonts:** Lilita One, Nunito and VT323 via Fontsource (SIL Open Font License).
 - **Melodies:** traditional nursery rhymes and lullabies, all public domain (Twinkle Twinkle, Brahms' Lullaby, Mary Had a Little Lamb, Frère Jacques, Row Row Row Your Boat, London Bridge, Hot Cross Buns), played on a synthesized music box with soft chords.
