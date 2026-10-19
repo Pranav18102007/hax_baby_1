@@ -24,5 +24,6 @@ export const features: { load: () => Promise<{ default: Feature }>; on: boolean 
   { load: () => import('./features/extras'), on: true },
   { load: () => import('./apps/stickers'), on: true },
   { load: () => import('./apps/fitcheck'), on: true },
+  { load: () => import('./features/tour'), on: true },
   { load: () => import('./features/cursors'), on: true },
 ];
